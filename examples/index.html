@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ComboSelect - Démonstration</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f9fafb;
+    }
+
+    .demo-section {
+      background: white;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-section h2 {
+      margin-top: 0;
+      color: #111827;
+      border-bottom: 2px solid #3b82f6;
+      padding-bottom: 0.5rem;
+    }
+
+    .demo-section h3 {
+      color: #374151;
+      margin-top: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .description {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    button.secondary {
+      background: #6b7280;
+    }
+
+    button.secondary:hover {
+      background: #4b5563;
+    }
+
+    .output {
+      background: #f3f4f6;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-family: monospace;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+      color: #111827;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      color: #111827;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: #6b7280;
+      font-size: 1.125rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎯 ComboSelect</h1>
+    <p>Une librairie moderne de sélection avec autocomplétion et tags</p>
+  </div>
+
+  <!-- Exemple 1: Simple avec URL -->
+  <div class="demo-section">
+    <h2>1. Exemple Simple (avec URL API)</h2>
+    <div class="form-group">
+      <label for="simple-select">Rechercher une ville</label>
+      <input type="text" id="simple-select" />
+      <p class="description">Commencez à taper pour rechercher une ville</p>
+    </div>
+    <div class="buttons">
+      <button onclick="getSimpleValue()">Obtenir la valeur</button>
+      <button class="secondary" onclick="clearSimple()">Vider</button>
+    </div>
+    <div id="simple-output" class="output"></div>
+  </div>
+
+  <!-- Exemple 2: Multiple avec tags -->
+  <div class="demo-section">
+    <h2>2. Sélection Multiple avec Tags</h2>
+    <div class="form-group">
+      <label for="multiple-select">Sélectionner plusieurs villes</label>
+      <input type="text" id="multiple-select" />
+      <p class="description">Vous pouvez sélectionner jusqu'à 5 villes</p>
+    </div>
+    <div class="buttons">
+      <button onclick="getMultipleValue()">Obtenir les valeurs</button>
+      <button class="secondary" onclick="clearMultiple()">Vider</button>
+      <button class="secondary" onclick="setMultipleValue()">Définir des valeurs</button>
+    </div>
+    <div id="multiple-output" class="output"></div>
+  </div>
+
+  <!-- Exemple 3: Avec incrementValueSize -->
+  <div class="demo-section">
+    <h2>3. Avec Compteur de Tags (incrementValueSize)</h2>
+    <div class="form-group">
+      <label for="increment-select">Sélectionner plusieurs pays</label>
+      <input type="text" id="increment-select" />
+      <p class="description">Après 2 tags, un compteur s'affiche (ex: +3)</p>
+    </div>
+    <div class="buttons">
+      <button onclick="getIncrementValue()">Obtenir les valeurs</button>
+      <button class="secondary" onclick="clearIncrement()">Vider</button>
+    </div>
+    <div id="increment-output" class="output"></div>
+  </div>
+
+  <!-- Exemple 4: Avec dataSource local -->
+  <div class="demo-section">
+    <h2>4. Source de Données Locale (dataSource)</h2>
+    <div class="form-group">
+      <label for="local-select">Sélectionner un langage de programmation</label>
+      <input type="text" id="local-select" />
+      <p class="description">Les données sont filtrées localement</p>
+    </div>
+    <div class="buttons">
+      <button onclick="getLocalValue()">Obtenir la valeur</button>
+      <button class="secondary" onclick="clearLocal()">Vider</button>
+    </div>
+    <div id="local-output" class="output"></div>
+  </div>
+
+  <!-- Exemple 5: Personnalisé avec render functions -->
+  <div class="demo-section">
+    <h2>5. Rendu Personnalisé</h2>
+    <div class="form-group">
+      <label for="custom-select">Sélectionner des utilisateurs</label>
+      <input type="text" id="custom-select" />
+      <p class="description">Suggestions et tags avec rendu personnalisé</p>
+    </div>
+    <div class="buttons">
+      <button onclick="getCustomValue()">Obtenir les valeurs</button>
+      <button class="secondary" onclick="clearCustom()">Vider</button>
+    </div>
+    <div id="custom-output" class="output"></div>
+  </div>
+
+  <!-- Exemple 6: Grid avec plusieurs exemples -->
+  <div class="demo-section">
+    <h2>6. Autres Configurations</h2>
+    <div class="grid">
+      <div class="form-group">
+        <label for="disabled-select">Input Désactivé</label>
+        <input type="text" id="disabled-select" />
+        <div class="buttons">
+          <button onclick="toggleDisabled()">Activer/Désactiver</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="minchars-select">Minimum 3 caractères</label>
+        <input type="text" id="minchars-select" />
+        <p class="description">Tapez au moins 3 caractères</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/examples/demo.ts"></script>
+</body>
+</html>

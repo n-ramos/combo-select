@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+/* Configuration Tailwind v4 - Thème personnalisé */
+@theme {
+  --color-comboselect-primary: #3b82f6;
+  --color-comboselect-primary-hover: #2563eb;
+  --color-comboselect-border: #d1d5db;
+  --color-comboselect-border-focus: #3b82f6;
+  --color-comboselect-background: #ffffff;
+  --color-comboselect-background-hover: #f3f4f6;
+  --color-comboselect-text: #111827;
+  --color-comboselect-text-secondary: #6b7280;
+  --color-comboselect-tag: #eff6ff;
+  --color-comboselect-tag-text: #1e40af;
+  --color-comboselect-tag-hover: #dbeafe;
+  
+  --shadow-comboselect-dropdown: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-comboselect-focus: 0 0 0 3px rgb(59 130 246 / 0.1);
+  
+  --animate-comboselect-dropdown: comboselect-dropdown 0.15s ease-out;
+  --animate-comboselect-tag: comboselect-tag 0.2s ease-out;
+}
+
+/* Keyframes pour les animations */
+@keyframes comboselect-dropdown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes comboselect-tag {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Styles de base du composant */
+.comboselect-wrapper {
+  @apply relative w-full;
+}
+
+.comboselect-control {
+  @apply relative flex flex-wrap items-center gap-1 
+         min-h-10 px-3 py-2 
+         bg-[var(--color-comboselect-background)] 
+         border border-[var(--color-comboselect-border)] 
+         rounded-lg
+         transition-all duration-200
+         cursor-text;
+}
+
+.comboselect-control:focus-within {
+  @apply border-[var(--color-comboselect-border-focus)]
+         shadow-[var(--shadow-comboselect-focus)]
+         outline-none;
+}
+
+.comboselect-control.disabled {
+  @apply bg-gray-50 cursor-not-allowed opacity-60;
+}
+
+.comboselect-tags {
+  @apply flex flex-wrap items-center gap-1 flex-1;
+}
+
+.comboselect-tag {
+  @apply inline-flex items-center gap-1.5 
+         px-2 py-1 
+         bg-[var(--color-comboselect-tag)] 
+         text-[var(--color-comboselect-tag-text)]
+         text-sm font-medium
+         rounded-md
+         transition-all duration-200
+         animate-[var(--animate-comboselect-tag)];
+}
+
+.comboselect-tag:hover {
+  @apply bg-[var(--color-comboselect-tag-hover)];
+}
+
+.comboselect-tag-remove {
+  @apply inline-flex items-center justify-center
+         w-4 h-4
+         text-[var(--color-comboselect-tag-text)]
+         hover:text-red-600
+         rounded
+         transition-colors
+         cursor-pointer;
+}
+
+.comboselect-tag-counter {
+  @apply inline-flex items-center justify-center
+         px-2 py-1
+         bg-gray-200 
+         text-gray-700
+         text-sm font-medium
+         rounded-md;
+}
+
+.comboselect-input {
+  @apply flex-1 min-w-[120px] 
+         text-[var(--color-comboselect-text)]
+         bg-transparent 
+         border-0 
+         outline-none
+         placeholder:text-[var(--color-comboselect-text-secondary)];
+}
+
+.comboselect-input:disabled {
+  @apply cursor-not-allowed;
+}
+
+.comboselect-dropdown {
+  @apply absolute left-0 right-0 
+         mt-1 
+         max-h-60 
+         overflow-auto
+         bg-[var(--color-comboselect-background)] 
+         border border-[var(--color-comboselect-border)]
+         rounded-lg
+         shadow-[var(--shadow-comboselect-dropdown)]
+         z-50
+         animate-[var(--animate-comboselect-dropdown)];
+}
+
+.comboselect-dropdown.hidden {
+  @apply hidden;
+}
+
+.comboselect-option {
+  @apply px-3 py-2 
+         text-[var(--color-comboselect-text)]
+         cursor-pointer
+         transition-colors
+         duration-150;
+}
+
+.comboselect-option:hover {
+  @apply bg-[var(--color-comboselect-background-hover)];
+}
+
+.comboselect-option.selected {
+  @apply bg-[var(--color-comboselect-primary)]
+         text-white;
+}
+
+.comboselect-option.focused {
+  @apply bg-[var(--color-comboselect-background-hover)];
+}
+
+.comboselect-option.disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.comboselect-no-results {
+  @apply px-3 py-2 
+         text-[var(--color-comboselect-text-secondary)]
+         text-center
+         italic;
+}
+
+.comboselect-loading {
+  @apply px-3 py-2 
+         text-[var(--color-comboselect-text-secondary)]
+         text-center
+         flex items-center justify-center gap-2;
+}
+
+.comboselect-loading-spinner {
+  @apply inline-block w-4 h-4 
+         border-2 border-[var(--color-comboselect-primary)]
+         border-t-transparent
+         rounded-full
+         animate-spin;
+}
+
+/* États de validation */
+.comboselect-wrapper.error .comboselect-control {
+  @apply border-red-500;
+}
+
+.comboselect-wrapper.error .comboselect-control:focus-within {
+  @apply border-red-500 shadow-[0_0_0_3px_rgb(239_68_68_/_0.1)];
+}
+
+.comboselect-wrapper.success .comboselect-control {
+  @apply border-green-500;
+}
+
+.comboselect-wrapper.success .comboselect-control:focus-within {
+  @apply border-green-500 shadow-[0_0_0_3px_rgb(34_197_94_/_0.1)];
+}
+/* Animation pour mettre en surbrillance un tag déjà sélectionné */
+@keyframes tag-highlight {
+    0%, 100% {
+      transform: scale(1);
+      background-color: var(--color-comboselect-tag);
+    }
+    25% {
+      transform: scale(1.1);
+      background-color: #fef3c7;
+    }
+    50% {
+      transform: scale(1.05);
+      background-color: #fde68a;
+    }
+    75% {
+      transform: scale(1.1);
+      background-color: #fef3c7;
+    }
+  }
+  
+  .comboselect-tag-highlight {
+    animation: tag-highlight 0.6s ease-in-out;
+  }

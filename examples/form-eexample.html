@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ComboSelect - Formulaire d'inscription</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f9fafb;
+    }
+
+    .form-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #111827;
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    label .required {
+      color: #ef4444;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 0.75rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button[type="submit"]:hover {
+      background: #2563eb;
+    }
+
+    .success-message {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .form-data {
+      background: #f3f4f6;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-family: monospace;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>📝 Formulaire d'inscription</h1>
+
+    <form id="registration-form">
+      <div class="form-group">
+        <label for="name">
+          Nom complet <span class="required">*</span>
+        </label>
+        <input type="text" id="name" name="name" required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">
+          Email <span class="required">*</span>
+        </label>
+        <input type="email" id="email" name="email" required />
+      </div>
+
+      <div class="form-group">
+        <label for="country">
+          Pays <span class="required">*</span>
+        </label>
+        <input type="text" id="country" name="country" required />
+      </div>
+
+      <div class="form-group">
+        <label for="cities">
+          Villes d'intérêt
+        </label>
+        <input type="text" id="cities" name="cities" />
+      </div>
+
+      <div class="form-group">
+        <label for="skills">
+          Compétences
+        </label>
+        <input type="text" id="skills" name="skills" />
+      </div>
+
+      <button type="submit">S'inscrire</button>
+    </form>
+
+    <div id="success-message" class="success-message">
+      <strong>✓ Inscription réussie !</strong>
+      <div id="form-data" class="form-data"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { ComboSelect } from '../src/index';
+
+    const countries = [
+      { code: 'FR', name: 'France', flag: '🇫🇷' },
+      { code: 'BE', name: 'Belgique', flag: '🇧🇪' },
+      { code: 'CH', name: 'Suisse', flag: '🇨🇭' },
+      { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+      { code: 'US', name: 'États-Unis', flag: '🇺🇸' },
+      { code: 'GB', name: 'Royaume-Uni', flag: '🇬🇧' },
+      { code: 'DE', name: 'Allemagne', flag: '🇩🇪' },
+      { code: 'ES', name: 'Espagne', flag: '🇪🇸' },
+      { code: 'IT', name: 'Italie', flag: '🇮🇹' },
+    ];
+
+    const cities = [
+      'Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice',
+      'Bruxelles', 'Genève', 'Montréal', 'New York', 'Londres'
+    ].map((city, id) => ({ id, name: city }));
+
+    const skills = [
+      'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular',
+      'Node.js', 'Python', 'PHP', 'Java', 'C#',
+      'HTML/CSS', 'SQL', 'MongoDB', 'Docker', 'Git'
+    ].map((skill, id) => ({ id, name: skill }));
+
+    // Pays (single)
+    const countrySelect = new ComboSelect('#country', {
+      dataSource: countries,
+      labelSuggestion: 'name',
+      valueSuggestion: 'code',
+      placeholder: 'Sélectionner votre pays...',
+      renderSuggestion: (item) => `${item.flag} ${item.name}`,
+      renderTag: (item) => {
+        const country = countries.find(c => c.code === item.value);
+        return `${country?.flag || ''} ${item.label}`;
+      }
+    });
+
+    // Villes (multiple)
+    const citiesSelect = new ComboSelect('#cities', {
+      dataSource: cities,
+      labelSuggestion: 'name',
+      valueSuggestion: 'id',
+      multiple: true,
+      maxItems: 5,
+      placeholder: 'Sélectionner des villes...',
+      closeOnSelect: false
+    });
+
+    // Compétences (multiple avec compteur)
+    const skillsSelect = new ComboSelect('#skills', {
+      dataSource: skills,
+      labelSuggestion: 'name',
+      valueSuggestion: 'id',
+      multiple: true,
+      incrementValueSize: 3,
+      placeholder: 'Sélectionner vos compétences...',
+      closeOnSelect: false
+    });
+
+    // Gestion du formulaire
+    document.getElementById('registration-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        country: countrySelect.getValue(),
+        cities: citiesSelect.getValue(),
+        skills: skillsSelect.getValue()
+      };
+
+      document.getElementById('form-data').textContent = JSON.stringify(formData, null, 2);
+      document.getElementById('success-message').classList.add('show');
+
+      console.log('Données du formulaire:', formData);
+    });
+  </script>
+</body>
+</html>

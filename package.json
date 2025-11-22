@@ -1,0 +1,88 @@
+{
+    "name": "comboselect",
+    "version": "0.1.0",
+    "description": "A modern, flexible select/autocomplete component with tags support",
+    "type": "module",
+    "main": "./dist/comboselect.umd.cjs",
+    "module": "./dist/comboselect.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "import": "./dist/comboselect.js",
+        "require": "./dist/comboselect.umd.cjs",
+        "types": "./dist/index.d.ts"
+      },
+      "./style.css": "./dist/style.css"
+    },
+    "files": [
+      "dist",
+      "README.md",
+      "LICENSE"
+    ],
+    "scripts": {
+      "dev": "vite",
+      "dev:demo": "vite --open /examples/index.html",
+      "dev:api": "vite --open /examples/api-example.html",
+      "dev:form": "vite --open /examples/form-example.html",
+      "build": "tsc && vite build",
+      "preview": "vite preview",
+      "type-check": "tsc --noEmit",
+      "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+      "lint:fix": "eslint . --ext ts,tsx --fix",
+      "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"examples/**/*.{html,ts}\"",
+      "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"examples/**/*.{html,ts}\"",
+      "test": "vitest",
+      "test:ui": "vitest --ui",
+      "test:coverage": "vitest --coverage",
+      "prepublishOnly": "npm run type-check && npm run lint && npm run build"
+    },
+    "keywords": [
+      "select",
+      "autocomplete",
+      "combobox",
+      "tags",
+      "dropdown",
+      "typescript",
+      "tailwind",
+      "input",
+      "multiselect",
+      "search"
+    ],
+    "author": "Your Name <your.email@example.com>",
+    "license": "MIT",
+    "devDependencies": {
+      "@tailwindcss/vite": "^4.1.17",
+      "@types/node": "^24.10.1",
+      "@typescript-eslint/eslint-plugin": "^8.47.0",
+      "@typescript-eslint/parser": "^8.47.0",
+      "@vitest/ui": "^4.0.13",
+      "eslint": "^9.39.1",
+      "jsdom": "^27.2.0",
+      "prettier": "^3.6.2",
+      "tailwindcss": "^4.1.17",
+      "typescript": "^5.9.3",
+      "vite": "^7.2.4",
+      "vite-plugin-dts": "^4.5.4",
+      "vitest": "^4.0.13"
+    },
+    "peerDependencies": {
+      "tailwindcss": "^4.0.0"
+    },
+    "peerDependenciesMeta": {
+      "tailwindcss": {
+        "optional": true
+      }
+    },
+    "engines": {
+      "node": ">=18.0.0",
+      "npm": ">=9.0.0"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/yourusername/comboselect.git"
+    },
+    "bugs": {
+      "url": "https://github.com/yourusername/comboselect/issues"
+    },
+    "homepage": "https://github.com/yourusername/comboselect#readme"
+  }
