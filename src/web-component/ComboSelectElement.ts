@@ -38,16 +38,26 @@ export class ComboSelectElement extends HTMLElement {
       'autocomplete-url',
       'results-key',
       'close-on-select',
+      'values'
     ];
   }
-
+private _initialValues?: SelectedItem[];
   /**
    * Appelé quand l'élément est ajouté au DOM
    */
-  connectedCallback(): void {
-    this.render();
-    this.initComboSelect();
+connectedCallback(): void {
+  this.render();
+  this.initComboSelect();
+
+  if (this._initialValues && this.comboSelect) {
+    const initialValues = this._initialValues;
+    setTimeout(() => {
+      if (this.comboSelect && initialValues) {
+        this.comboSelect.setValue(initialValues);
+      }
+    }, 100);
   }
+}
 
   /**
    * Appelé quand l'élément est retiré du DOM
@@ -104,7 +114,49 @@ export class ComboSelectElement extends HTMLElement {
     }
 
     this.comboSelect = new ComboSelect(inputEl, config);
+      const valuesAttr = this.getAttribute('values');
+  if (valuesAttr) {
+    this.parseAndSetValues(valuesAttr);
   }
+  }
+  private parseAndSetValues(valuesStr: string): void {
+  try {
+    const parsed = JSON.parse(valuesStr);
+    
+    if (!Array.isArray(parsed)) {
+      console.warn('Values attribute must be a JSON array');
+      return;
+    }
+
+    // Convertir en SelectedItem[]
+    const selectedItems: SelectedItem[] = parsed.map((item) => {
+      // Si c'est déjà un objet avec label et value
+      if (typeof item === 'object' && item !== null && 'label' in item && 'value' in item) {
+        return {
+          label: String(item.label),
+          value: item.value,
+          original: item.original || item,
+        };
+      }
+      
+      // Si c'est juste une valeur primitive
+      return {
+        label: String(item),
+        value: item,
+        original: item,
+      };
+    });
+
+    if (this.comboSelect) {
+      this.comboSelect.setValue(selectedItems);
+    } else {
+      // Stocker pour plus tard (au moment du connectedCallback)
+      this._initialValues = selectedItems;
+    }
+  } catch (error) {
+    console.error('Failed to parse values attribute:', error);
+  }
+}
 
   /**
    * Construire la configuration depuis les attributs
@@ -274,7 +326,17 @@ export class ComboSelectElement extends HTMLElement {
   getValue(): SelectedItem[] {
     return this.comboSelect?.getValue() || [];
   }
+get values(): SelectedItem[] {
+  return this.comboSelect?.getValue() || [];
+}
 
+set values(items: SelectedItem[]) {
+  if (this.comboSelect) {
+    this.comboSelect.setValue(items);
+  } else {
+    this._initialValues = items;
+  }
+}
   /**
    * Définir les valeurs sélectionnées
    */

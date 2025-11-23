@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
         ],
         'cities_count' => isset($data['cities']) ? count($data['cities']) : 0,
         'country_selected' => isset($data['country']) && !empty($data['country']) ? 'Yes' : 'No',
+        'tags_count' => isset($data['tags']) ? count($data['tags']) : 0,
+        'preset_tags_count' => isset($data['preset-tags']) ? count($data['preset-tags']) : 0,
     ];
     
     echo json_encode($response, JSON_PRETTY_PRINT);
@@ -42,6 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode($response, JSON_PRETTY_PRINT);
     exit;
 }
+
+// Simuler des valeurs pré-remplies (comme si on éditait un formulaire)
+$preselectedTags = [
+    ['id' => 5, 'name' => 'Node.js'],
+    ['id' => 9, 'name' => 'TailwindCSS'],
+    ['id' => 10, 'name' => 'Bootstrap']
+];
+$preselectedTagsJson = json_encode($preselectedTags);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -113,11 +123,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .badge.single { background: #10b981; color: white; }
         .badge.max { background: #f59e0b; color: white; }
         .badge.counter { background: #8b5cf6; color: white; }
+        .badge.preset { background: #ec4899; color: white; }
+        .badge.value-attr { background: #ef4444; color: white; }
 
         .description {
             font-size: 0.875rem;
             color: #6b7280;
             margin-top: 0.25rem;
+        }
+
+        .description code {
+            background: #f3f4f6;
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.8125rem;
+            color: #dc2626;
         }
 
         input[type="text"]:not(.comboselect-input) {
@@ -313,20 +334,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight: 700;
             color: #111827;
         }
+
+        .highlight-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+        }
+
+        .highlight-box strong {
+            color: #92400e;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🧪 ComboSelect PHP Test</h1>
-            <p>Test complet de soumission et débogage avec la vraie librairie</p>
+            <p>Test complet avec attribut <code>value</code> sur l'input</p>
         </div>
 
         <div class="info-box">
             <strong>📋 Instructions</strong>
-            <p>1. Sélectionnez des villes et un pays</p>
-            <p>2. Cliquez sur "Soumettre (AJAX)" pour voir la réponse JSON du serveur</p>
-            <p>3. Les données sélectionnées seront affichées dans les onglets ci-dessous</p>
+            <p>1. Observe les 4 exemples différents ci-dessous</p>
+            <p>2. Les exemples "Tags JS" et "Tags HTML" sont tous deux pré-remplis mais de manières différentes</p>
+            <p>3. Clique sur "Soumettre (AJAX)" pour voir la réponse JSON du serveur</p>
             <p style="margin-top: 0.5rem;">
                 Serveur démarré : <code>cd examples && php -S localhost:8000 test-comboselect.php</code>
             </p>
@@ -338,6 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </h2>
 
             <form id="testForm">
+                <!-- Exemple 1: Sans valeurs par défaut -->
                 <div class="form-group">
                     <label for="cities">
                         Sélectionner des villes
@@ -348,34 +382,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" id="cities" name="cities" />
                     <p class="description">
                         Tapez pour rechercher. Après 3 tags, un compteur +N s'affichera. 
-                        Les doublons sont automatiquement évités.
+                        Aucune valeur par défaut.
                     </p>
                 </div>
 
+                <!-- Exemple 2: Sans valeurs par défaut -->
                 <div class="form-group">
                     <label for="country">
                         Sélectionner un pays
                         <span class="badge single">Single</span>
                     </label>
                     <input type="text" id="country" name="country" />
-                    <p class="description">Sélection simple d'un pays avec drapeau.</p>
+                    <p class="description">Sélection simple d'un pays avec drapeau. Aucune valeur par défaut.</p>
                 </div>
 
+                <!-- Exemple 3: Avec valeurs dans la config JS -->
                 <div class="form-group">
-                    <label for="languages">
-                        Langages de programmation
+                    <label for="tags">
+                        Tags populaires (config JS)
                         <span class="badge multiple">Multiple</span>
-                        <span class="badge max">Max 5</span>
+                        <span class="badge preset">Config values</span>
                         <span class="badge counter">+Counter</span>
                     </label>
-                    <input type="text" id="languages" name="languages" />
-                    <p class="description">Sélectionnez vos langages préférés. Après 2 tags, un compteur s'affiche.</p>
+                    <input type="text" id="tags" name="tags" />
+                    <p class="description">
+                        <strong>✨ Valeurs définies dans <code>config.values</code> en JavaScript</strong><br>
+                        React, Vue.js et Angular sont présélectionnés via la config.
+                    </p>
+                </div>
+
+                <!-- Exemple 4: Avec attribut value sur l'input (NOUVEAU) -->
+                <div class="form-group">
+                    <label for="preset-tags">
+                        Tags pré-remplis (attribut HTML)
+                        <span class="badge multiple">Multiple</span>
+                        <span class="badge value-attr">Attribut value</span>
+                        <span class="badge counter">+Counter</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="preset-tags" 
+                        name="preset-tags"
+                        value='<?= htmlspecialchars($preselectedTagsJson) ?>'
+                    />
+                    <p class="description">
+                        <strong>🎯 Valeurs définies directement dans l'attribut <code>value</code> de l'input !</strong><br>
+                        Node.js, TailwindCSS et Bootstrap sont présélectionnés.
+                    </p>
+                    <div class="highlight-box">
+                        <strong>📝 Code PHP utilisé :</strong>
+                        <pre style="margin-top: 0.5rem; overflow-x: auto;"><code>&lt;input value='&lt;?= htmlspecialchars($preselectedTagsJson) ?&gt;' /&gt;</code></pre>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label for="name">Votre nom (input classique)</label>
                     <input type="text" id="name" name="name" placeholder="Entrez votre nom...">
-                    <p class="description">Input HTML standard pour comparaison.</p>
                 </div>
 
                 <div class="form-group">
@@ -411,12 +473,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="stat-value" id="stat-cities">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Langages sélectionnés</div>
-                    <div class="stat-value" id="stat-languages">0</div>
+                    <div class="stat-label">Tags (config JS)</div>
+                    <div class="stat-value" id="stat-tags">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Pays sélectionné</div>
-                    <div class="stat-value" id="stat-country">Non</div>
+                    <div class="stat-label">Tags (attribut HTML)</div>
+                    <div class="stat-value" id="stat-preset-tags">0</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Temps de réponse</div>
@@ -478,18 +540,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             { code: 'NL', name: 'Pays-Bas', flag: '🇳🇱' },
         ];
 
-        const languages = [
-            { id: 1, name: 'JavaScript', category: 'Web', color: '#f7df1e' },
-            { id: 2, name: 'TypeScript', category: 'Web', color: '#3178c6' },
-            { id: 3, name: 'Python', category: 'Backend', color: '#3776ab' },
-            { id: 4, name: 'PHP', category: 'Backend', color: '#777bb4' },
-            { id: 5, name: 'Java', category: 'Backend', color: '#007396' },
-            { id: 6, name: 'C#', category: 'Backend', color: '#239120' },
-            { id: 7, name: 'Go', category: 'Backend', color: '#00add8' },
-            { id: 8, name: 'Rust', category: 'Systems', color: '#000000' },
+        const tagsData = [
+            { id: 1, name: 'React', category: 'Framework', color: '#61dafb' },
+            { id: 2, name: 'Vue.js', category: 'Framework', color: '#4fc08d' },
+            { id: 3, name: 'Angular', category: 'Framework', color: '#dd0031' },
+            { id: 4, name: 'Svelte', category: 'Framework', color: '#ff3e00' },
+            { id: 5, name: 'Node.js', category: 'Runtime', color: '#339933' },
+            { id: 6, name: 'Express', category: 'Backend', color: '#000000' },
+            { id: 7, name: 'Django', category: 'Backend', color: '#092e20' },
+            { id: 8, name: 'Laravel', category: 'Backend', color: '#ff2d20' },
+            { id: 9, name: 'TailwindCSS', category: 'CSS', color: '#06b6d4' },
+            { id: 10, name: 'Bootstrap', category: 'CSS', color: '#7952b3' },
         ];
 
-        // Initialiser ComboSelect pour les villes
+        // Fonction de rendu partagée pour les tags
+        const renderTagSuggestion = (tag) => {
+            return `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="width: 12px; height: 12px; border-radius: 50%; background: ${tag.color};"></span>
+                    <strong>${tag.name}</strong>
+                    <span style="font-size: 0.875rem; color: #6b7280;">${tag.category}</span>
+                </div>
+            `;
+        };
+
+        const renderTagItem = (item) => {
+            const color = item.original?.color || '#667eea';
+            return `
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: ${color};"></span>
+                    ${item.label}
+                </span>
+            `;
+        };
+
+        // Exemple 1: Villes (sans valeurs par défaut)
         const citiesCombo = new ComboSelect('#cities', {
             dataSource: cities,
             labelSuggestion: 'name',
@@ -511,7 +596,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
-        // Initialiser ComboSelect pour les pays
+        // Exemple 2: Pays (sans valeurs par défaut)
         const countryCombo = new ComboSelect('#country', {
             dataSource: countries,
             labelSuggestion: 'name',
@@ -531,25 +616,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
-        // Initialiser ComboSelect pour les langages
-        const languagesCombo = new ComboSelect('#languages', {
-            dataSource: languages,
+        // Exemple 3: Tags avec valeurs dans config.values (JS)
+        const tagsCombo = new ComboSelect('#tags', {
+            dataSource: tagsData,
             labelSuggestion: 'name',
             valueSuggestion: 'id',
             multiple: true,
-            maxItems: 5,
-            incrementValueSize: 2,
-            placeholder: 'Sélectionner des langages...',
+            maxItems: 8,
+            incrementValueSize: 3,
+            placeholder: 'Sélectionner des tags...',
             closeOnSelect: false,
-            renderSuggestion: (lang) => {
-                return `
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="width: 12px; height: 12px; border-radius: 50%; background: ${lang.color};"></span>
-                        <strong>${lang.name}</strong>
-                        <span style="font-size: 0.875rem; color: #6b7280;">(${lang.category})</span>
-                    </div>
-                `;
-            }
+            
+            // ✨ VALEURS DÉFINIES EN JAVASCRIPT
+            values: [
+                { id: 1, name: 'React' },
+                { id: 2, name: 'Vue.js' },
+                { id: 3, name: 'Angular' }
+            ],
+            
+            renderSuggestion: renderTagSuggestion,
+            renderTag: renderTagItem
+        });
+
+        // Exemple 4: Tags avec attribut value sur l'input (HTML/PHP)
+        // ⚠️ IMPORTANT: Ne PAS mettre de config.values ici !
+        // Les valeurs sont lues depuis l'attribut value de l'input
+        const presetTagsCombo = new ComboSelect('#preset-tags', {
+            dataSource: tagsData,
+            labelSuggestion: 'name',
+            valueSuggestion: 'id',
+            multiple: true,
+            maxItems: 8,
+            incrementValueSize: 3,
+            placeholder: 'Sélectionner des tags...',
+            closeOnSelect: false,
+            
+            // 🎯 PAS DE config.values - lit l'attribut value automatiquement !
+            
+            renderSuggestion: renderTagSuggestion,
+            renderTag: renderTagItem
         });
 
         // Gestion de la soumission du formulaire
@@ -569,14 +674,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Récupérer toutes les valeurs
                 const citiesValue = citiesCombo.getValue();
                 const countryValue = countryCombo.getValue();
-                const languagesValue = languagesCombo.getValue();
+                const tagsValue = tagsCombo.getValue();
+                const presetTagsValue = presetTagsCombo.getValue();
                 const nameValue = document.getElementById('name').value;
                 const emailValue = document.getElementById('email').value;
 
                 const formData = {
                     cities: citiesValue,
                     country: countryValue,
-                    languages: languagesValue,
+                    tags: tagsValue,
+                    'preset-tags': presetTagsValue,
                     name: nameValue,
                     email: emailValue
                 };
@@ -585,7 +692,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const simplifiedData = {
                     cities: citiesValue.map(c => ({ id: c.value, name: c.label })),
                     country: countryValue.length > 0 ? { code: countryValue[0].value, name: countryValue[0].label } : null,
-                    languages: languagesValue.map(l => ({ id: l.value, name: l.label })),
+                    tags: tagsValue.map(t => ({ id: t.value, name: t.label })),
+                    presetTags: presetTagsValue.map(t => ({ id: t.value, name: t.label })),
                     name: nameValue,
                     email: emailValue
                 };
@@ -594,7 +702,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Afficher les objets complets
                 objectsData.textContent = JSON.stringify(formData, null, 2);
 
-                // Données POST (ce qui sera envoyé)
+                // Données POST
                 rawData.textContent = JSON.stringify(formData, null, 2);
 
                 // Statut loading
@@ -621,8 +729,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Mettre à jour les stats
                 document.getElementById('stat-cities').textContent = citiesValue.length;
-                document.getElementById('stat-languages').textContent = languagesValue.length;
-                document.getElementById('stat-country').textContent = countryValue.length > 0 ? 'Oui' : 'Non';
+                document.getElementById('stat-tags').textContent = tagsValue.length;
+                document.getElementById('stat-preset-tags').textContent = presetTagsValue.length;
                 document.getElementById('stat-time').textContent = responseTime + 'ms';
                 statsDiv.style.display = 'grid';
 
@@ -641,7 +749,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         window.clearForm = () => {
             citiesCombo.clear();
             countryCombo.clear();
-            languagesCombo.clear();
+            tagsCombo.clear();
+            presetTagsCombo.clear();
             document.getElementById('name').value = '';
             document.getElementById('email').value = '';
             document.getElementById('serverResponse').textContent = '';
@@ -656,16 +765,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const values = {
                 cities: citiesCombo.getValue(),
                 country: countryCombo.getValue(),
-                languages: languagesCombo.getValue(),
+                tags: tagsCombo.getValue(),
+                presetTags: presetTagsCombo.getValue(),
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value
             };
-            console.log('Current values:', values);
+            console.log('📊 Current values:', values);
+            console.log('🎯 Tags (config JS):', tagsCombo.getValue());
+            console.log('🎯 Tags (attribut HTML):', presetTagsCombo.getValue());
             alert('Voir la console (F12) pour les valeurs complètes');
         };
 
         window.populateForm = () => {
-            // Ajouter quelques valeurs par défaut
             citiesCombo.setValue([
                 { label: 'Paris', value: 1, original: cities[0] },
                 { label: 'Lyon', value: 3, original: cities[2] },
@@ -677,28 +788,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 { label: 'France', value: 'FR', original: countries[0] }
             ]);
 
-            languagesCombo.setValue([
-                { label: 'JavaScript', value: 1, original: languages[0] },
-                { label: 'TypeScript', value: 2, original: languages[1] },
-                { label: 'Python', value: 3, original: languages[2] }
-            ]);
-
             document.getElementById('name').value = 'Jean Dupont';
             document.getElementById('email').value = 'jean.dupont@example.com';
         };
 
         window.switchTab = (tabName) => {
-            // Cacher tous les contenus
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
             
-            // Désactiver tous les onglets
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
 
-            // Activer l'onglet cliqué
             document.getElementById(tabName + '-tab').classList.add('active');
             event.target.classList.add('active');
         };
@@ -707,7 +809,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         console.log('📊 Statistiques:');
         console.log('  - Villes disponibles:', cities.length);
         console.log('  - Pays disponibles:', countries.length);
-        console.log('  - Langages disponibles:', languages.length);
+        console.log('  - Tags disponibles:', tagsData.length);
+        console.log('  - Tags (config JS) présélectionnés:', tagsCombo.getValue().length);
+        console.log('  - Tags (attribut HTML) présélectionnés:', presetTagsCombo.getValue().length);
+        console.log('');
+        console.log('🎯 Différences:');
+        console.log('  - Tags (config JS): valeurs dans new ComboSelect({ values: [...] })');
+        console.log('  - Tags (attribut HTML): valeurs dans <input value="..." />');
     </script>
 </body>
 </html>

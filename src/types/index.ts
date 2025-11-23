@@ -52,6 +52,26 @@ export interface ComboSelectConfig<T = Record<string, unknown>> {
    */
   transformResponse?: (response: unknown) => T[];
 
+  /**
+   * Valeurs présélectionnées au chargement
+   * Peut être un tableau de SelectedItem complets, d'objets, ou de valeurs primitives
+   * 
+   * @example
+   * // Avec SelectedItem complets
+   * values: [
+   *   { label: 'John Doe', value: 1, original: {...} }
+   * ]
+   * 
+   * // Avec objets (seront convertis selon labelSuggestion/valueSuggestion)
+   * values: [
+   *   { id: 1, name: 'John Doe' }
+   * ]
+   * 
+   * // Avec valeurs primitives
+   * values: ['JavaScript', 'TypeScript']
+   */
+  values?: SelectedItem<T>[] | T[] | unknown[];
+
   // ===========================
   // DISPLAY
   // ===========================

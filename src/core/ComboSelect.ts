@@ -36,54 +36,141 @@ export class ComboSelect {
   // State
   private isDisabled: boolean;
 
-  constructor(selector: string | HTMLInputElement, options: Partial<ComboSelectConfig> = {}) {
-    let element: HTMLInputElement;
-    
-    if (typeof selector === 'string') {
-      const el = document.querySelector(selector);
-      if (!el || !(el instanceof HTMLInputElement)) {
-        throw new Error(`Element "${selector}" not found or is not an input element`);
-      }
-      element = el;
-    } else if (selector instanceof HTMLInputElement) {
-      element = selector;
-    } else {
-      throw new Error('Selector must be a string or an HTMLInputElement');
+constructor(selector: string | HTMLInputElement, options: Partial<ComboSelectConfig> = {}) {
+  let element: HTMLInputElement;
+  
+  if (typeof selector === 'string') {
+    const el = document.querySelector(selector);
+    if (!el || !(el instanceof HTMLInputElement)) {
+      throw new Error(`Element "${selector}" not found or is not an input element`);
     }
-
-    this.originalInput = element;
-    this.rootElement = element.getRootNode() as Document | ShadowRoot;
-    
-    this.config = new Config(options);
-    this.events = new EventEmitter();
-    this.isDisabled = false;
-
-    // Initialiser les services avec le type générique
-    const fullConfig = this.config.getAll();
-    this.dataService = new DataService<ComboSelectData>(fullConfig as ComboSelectConfig<ComboSelectData>);
-    this.searchService = new SearchService<ComboSelectData>(
-      fullConfig as ComboSelectConfig<ComboSelectData>, 
-      this.dataService
-    );
-    this.renderService = new RenderService(this.config);
-
-    this.container = this.createContainer();
-    this.controlElement = this.createControl();
-    this.tagsContainer = this.createTagsContainer();
-    this.hiddenInput = this.createHiddenInput();
-
-    this.input = new Input(this.config, this.events);
-    this.dropdown = new Dropdown(this.events, this.renderService);
-    this.tagList = new TagList(this.tagsContainer, this.config, this.events, this.renderService);
-
-    this.assemble();
-    this.attachEvents();
-    this.setupSearchCallbacks();
-    this.loadCustomCSS();
-
-    this.originalInput.style.display = 'none';
+    element = el;
+  } else if (selector instanceof HTMLInputElement) {
+    element = selector;
+  } else {
+    throw new Error('Selector must be a string or an HTMLInputElement');
   }
 
+  this.originalInput = element;
+  this.rootElement = element.getRootNode() as Document | ShadowRoot;
+  
+  this.config = new Config(options);
+  this.events = new EventEmitter();
+  this.isDisabled = false;
+
+  const fullConfig = this.config.getAll();
+  this.dataService = new DataService<ComboSelectData>(fullConfig as ComboSelectConfig<ComboSelectData>);
+  this.searchService = new SearchService<ComboSelectData>(
+    fullConfig as ComboSelectConfig<ComboSelectData>, 
+    this.dataService
+  );
+  this.renderService = new RenderService(this.config);
+
+  this.container = this.createContainer();
+  this.controlElement = this.createControl();
+  this.tagsContainer = this.createTagsContainer();
+  this.hiddenInput = this.createHiddenInput();
+
+  this.input = new Input(this.config, this.events);
+  this.dropdown = new Dropdown(this.events, this.renderService);
+  this.tagList = new TagList(this.tagsContainer, this.config, this.events, this.renderService);
+
+  this.assemble();
+  this.attachEvents();
+  this.setupSearchCallbacks();
+  this.loadCustomCSS();
+
+  this.originalInput.style.display = 'none';
+  
+  // AJOUT - Charger les valeurs initiales
+  // Priorité: 1) config.values, 2) attribut value de l'input
+  this.loadInitialValues();
+}
+
+/**
+ * Charger les valeurs initiales depuis la config ou l'attribut value
+ */
+private loadInitialValues(): void {
+  let initialValues = this.config.get('values');
+  
+  // Si pas de values dans la config, essayer de lire l'attribut value de l'input
+  if (!initialValues || !Array.isArray(initialValues) || initialValues.length === 0) {
+    const inputValue = this.originalInput.value;
+    
+    if (inputValue && inputValue.trim()) {
+      try {
+        const parsed = JSON.parse(inputValue);
+        if (Array.isArray(parsed)) {
+          initialValues = parsed;
+        }
+      } catch (error) {
+        console.warn('Failed to parse input value as JSON:', error);
+        // Si ce n'est pas du JSON, ignorer silencieusement
+        return;
+      }
+    }
+  }
+  
+  if (!initialValues || !Array.isArray(initialValues) || initialValues.length === 0) {
+    return;
+  }
+
+  // Convertir en SelectedItem[]
+  const selectedItems: SelectedItem[] = this.convertToSelectedItems(initialValues);
+
+  // Appliquer les valeurs après un court délai
+  setTimeout(() => {
+    this.setValue(selectedItems);
+  }, 0);
+}
+  // AJOUT - Nouvelle méthode privée
+/**
+ * Convertir différents formats en SelectedItem[]
+ */
+/**
+ * Convertir différents formats en SelectedItem[]
+ */
+private convertToSelectedItems(values: unknown[]): SelectedItem<ComboSelectData>[] {
+  const labelKey = (this.config.get('labelSuggestion') as string) || 'label';
+  const valueKey = this.config.get('valueSuggestion') as string | null;
+
+  return values.map((item): SelectedItem<ComboSelectData> => {
+    // Cas 1: C'est déjà un SelectedItem complet
+    if (this.isSelectedItem(item)) {
+      return {
+        label: item.label,
+        value: item.value,
+        original: (item.original || item) as ComboSelectData,
+      };
+    }
+    
+    // Cas 2: C'est un objet (mais pas un SelectedItem)
+    if (typeof item === 'object' && item !== null) {
+      const obj = item as Record<string, unknown>;
+      
+      // Essayer d'extraire label et value selon la config
+      const label = String(obj[labelKey] || obj['label'] || obj['name'] || '');
+      const value = valueKey 
+        ? obj[valueKey] 
+        : (obj['value'] !== undefined ? obj['value'] : obj['id']);
+      
+      return {
+        label,
+        value,
+        original: obj as ComboSelectData,
+      };
+    }
+    
+    // Cas 3: C'est une valeur primitive (string, number, etc.)
+    // On crée un objet minimal pour original
+    const primitiveValue = item as string | number | boolean;
+    return {
+      label: String(primitiveValue),
+      value: primitiveValue,
+      original: { value: primitiveValue } as ComboSelectData,
+    };
+  });
+}
   private createContainer(): HTMLElement {
     const container = DOMHelpers.createElement('div', 'comboselect-wrapper');
     return container;
