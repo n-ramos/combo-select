@@ -56,7 +56,7 @@ export class TagList {
 
   private highlightTag(index: number): void {
     const tag = this.tags[index];
-    if (!tag) return;
+    if (!tag) {return;}
 
     const element = tag.getElement();
     element.classList.add('comboselect-tag-highlight');

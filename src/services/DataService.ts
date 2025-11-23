@@ -90,7 +90,7 @@ export class DataService<T = any> {
 
     try {
       let url = autocompleteUrl;
-      let fetchOptions: RequestInit = {
+      const fetchOptions: RequestInit = {
         signal: this.abortController.signal,
         headers: {
           ...DEFAULT_HTTP_HEADERS,
@@ -156,6 +156,7 @@ export class DataService<T = any> {
       try {
         return transformResponse(data);
       } catch (error) {
+         console.error('Error extracting results:', error);
         throw new Error(ERROR_MESSAGES.PARSE_ERROR);
       }
     }

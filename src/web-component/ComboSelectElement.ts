@@ -45,7 +45,7 @@ export class ComboSelectElement extends HTMLElement {
   }
 
   private render() {
-    if (!this.shadowRoot) return;
+    if (!this.shadowRoot) {return;}
 
     // Créer le style
     const styleEl = document.createElement('style');
@@ -63,12 +63,12 @@ export class ComboSelectElement extends HTMLElement {
   }
 
   private initComboSelect() {
-    if (!this.inputElement || !this.shadowRoot) return;
+    if (!this.inputElement || !this.shadowRoot) {return;}
 
     const config = this.buildConfig();
     const inputEl = this.shadowRoot.querySelector('#combo-input') as HTMLInputElement;
 
-    if (!inputEl) return;
+    if (!inputEl) {return;}
 
     // Passer directement l'élément HTMLInputElement
     this.comboSelect = new ComboSelect(inputEl, config);
@@ -86,19 +86,19 @@ export class ComboSelectElement extends HTMLElement {
 
     // Max items
     const maxItems = this.getAttribute('max-items');
-    if (maxItems) config.maxItems = parseInt(maxItems, 10);
+    if (maxItems) {config.maxItems = parseInt(maxItems, 10);}
 
     // Min chars
     const minChars = this.getAttribute('min-chars');
-    if (minChars) config.minChars = parseInt(minChars, 10);
+    if (minChars) {config.minChars = parseInt(minChars, 10);}
 
     // Debounce delay
     const debounceDelay = this.getAttribute('debounce-delay');
-    if (debounceDelay) config.debounceDelay = parseInt(debounceDelay, 10);
+    if (debounceDelay) {config.debounceDelay = parseInt(debounceDelay, 10);}
 
     // Increment value size
     const incrementValueSize = this.getAttribute('increment-value-size');
-    if (incrementValueSize) config.incrementValueSize = parseInt(incrementValueSize, 10);
+    if (incrementValueSize) {config.incrementValueSize = parseInt(incrementValueSize, 10);}
 
     // Data source depuis la propriété JavaScript
     if (this._dataSource) {
