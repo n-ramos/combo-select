@@ -2,17 +2,29 @@ import { ComboSelect } from '@core/ComboSelect';
 import type { ComboSelectConfig, SelectedItem } from '../types/index';
 import styles from '../styles/comboselect.css?inline';
 
+/**
+ * Type pour les données du Web Component
+ */
+type WebComponentData = Record<string, unknown>;
+
+/**
+ * Web Component personnalisé pour ComboSelect
+ * Utilise le Shadow DOM pour l'encapsulation CSS
+ */
 export class ComboSelectElement extends HTMLElement {
   private comboSelect?: ComboSelect;
   private inputElement?: HTMLInputElement;
-  private _dataSource?: any[] | (() => any[] | Promise<any[]>);
+  private _dataSource?: WebComponentData[] | (() => WebComponentData[] | Promise<WebComponentData[]>);
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
   }
 
-  static get observedAttributes() {
+  /**
+   * Attributs observés pour les changements
+   */
+  static get observedAttributes(): string[] {
     return [
       'placeholder',
       'multiple',
@@ -29,23 +41,37 @@ export class ComboSelectElement extends HTMLElement {
     ];
   }
 
-  connectedCallback() {
+  /**
+   * Appelé quand l'élément est ajouté au DOM
+   */
+  connectedCallback(): void {
     this.render();
     this.initComboSelect();
   }
 
-  disconnectedCallback() {
+  /**
+   * Appelé quand l'élément est retiré du DOM
+   */
+  disconnectedCallback(): void {
     this.comboSelect?.destroy();
   }
 
-  attributeChangedCallback(_name: string, oldValue: string, newValue: string) {
+  /**
+   * Appelé quand un attribut change
+   */
+  attributeChangedCallback(_name: string, oldValue: string, newValue: string): void {
     if (oldValue !== newValue && this.comboSelect) {
       this.updateConfig();
     }
   }
 
-  private render() {
-    if (!this.shadowRoot) {return;}
+  /**
+   * Créer la structure HTML dans le Shadow DOM
+   */
+  private render(): void {
+    if (!this.shadowRoot) {
+      return;
+    }
 
     // Créer le style
     const styleEl = document.createElement('style');
@@ -62,20 +88,27 @@ export class ComboSelectElement extends HTMLElement {
     this.shadowRoot.appendChild(this.inputElement);
   }
 
-  private initComboSelect() {
-    if (!this.inputElement || !this.shadowRoot) {return;}
+  /**
+   * Initialiser le ComboSelect
+   */
+  private initComboSelect(): void {
+    if (!this.inputElement || !this.shadowRoot) {
+      return;
+    }
 
     const config = this.buildConfig();
     const inputEl = this.shadowRoot.querySelector('#combo-input') as HTMLInputElement;
 
-    if (!inputEl) {return;}
+    if (!inputEl) {
+      return;
+    }
 
-    // Passer directement l'élément HTMLInputElement
     this.comboSelect = new ComboSelect(inputEl, config);
-
-    console.log('✅ ComboSelect initialized with config:', config);
   }
 
+  /**
+   * Construire la configuration depuis les attributs
+   */
   private buildConfig(): Partial<ComboSelectConfig> {
     const config: Partial<ComboSelectConfig> = {
       placeholder: this.getAttribute('placeholder') || 'Sélectionner...',
@@ -86,31 +119,37 @@ export class ComboSelectElement extends HTMLElement {
 
     // Max items
     const maxItems = this.getAttribute('max-items');
-    if (maxItems) {config.maxItems = parseInt(maxItems, 10);}
+    if (maxItems) {
+      config.maxItems = parseInt(maxItems, 10);
+    }
 
     // Min chars
     const minChars = this.getAttribute('min-chars');
-    if (minChars) {config.minChars = parseInt(minChars, 10);}
+    if (minChars) {
+      config.minChars = parseInt(minChars, 10);
+    }
 
     // Debounce delay
     const debounceDelay = this.getAttribute('debounce-delay');
-    if (debounceDelay) {config.debounceDelay = parseInt(debounceDelay, 10);}
+    if (debounceDelay) {
+      config.debounceDelay = parseInt(debounceDelay, 10);
+    }
 
     // Increment value size
     const incrementValueSize = this.getAttribute('increment-value-size');
-    if (incrementValueSize) {config.incrementValueSize = parseInt(incrementValueSize, 10);}
+    if (incrementValueSize) {
+      config.incrementValueSize = parseInt(incrementValueSize, 10);
+    }
 
     // Data source depuis la propriété JavaScript
     if (this._dataSource) {
       config.dataSource = this._dataSource;
-      console.log('📦 DataSource set:', this._dataSource);
     }
 
     // Autocomplete URL
     const autocompleteUrl = this.getAttribute('autocomplete-url');
     if (autocompleteUrl) {
       config.autocompleteUrl = autocompleteUrl;
-      console.log('🌐 Autocomplete URL:', autocompleteUrl);
     }
 
     // Results key
@@ -177,7 +216,7 @@ export class ComboSelectElement extends HTMLElement {
       }));
     };
 
-    config.onLoad = (data: any[]) => {
+    config.onLoad = (data: unknown[]) => {
       this.dispatchEvent(new CustomEvent('comboselect-load', { 
         detail: data,
         bubbles: true,
@@ -186,7 +225,7 @@ export class ComboSelectElement extends HTMLElement {
     };
 
     config.onError = (error: Error) => {
-      console.error('❌ ComboSelect error:', error);
+      console.error('ComboSelect error:', error);
       this.dispatchEvent(new CustomEvent('comboselect-error', { 
         detail: error,
         bubbles: true,
@@ -197,54 +236,83 @@ export class ComboSelectElement extends HTMLElement {
     return config;
   }
 
-  private updateConfig() {
-    // Reconstruire et mettre à jour la config
+  /**
+   * Mettre à jour la configuration
+   */
+  private updateConfig(): void {
     if (this.comboSelect) {
       this.comboSelect.destroy();
       this.initComboSelect();
     }
   }
 
-  // API publique
-  get dataSource(): any[] | (() => any[] | Promise<any[]>) | undefined {
+  // ===========================
+  // API PUBLIQUE
+  // ===========================
+
+  /**
+   * Obtenir la source de données
+   */
+  get dataSource(): WebComponentData[] | (() => WebComponentData[] | Promise<WebComponentData[]>) | undefined {
     return this._dataSource;
   }
 
-  set dataSource(value: any[] | (() => any[] | Promise<any[]>) | undefined) {
-    console.log('🔧 Setting dataSource:', value);
+  /**
+   * Définir la source de données
+   */
+  set dataSource(value: WebComponentData[] | (() => WebComponentData[] | Promise<WebComponentData[]>) | undefined) {
     this._dataSource = value;
     
-    // Si ComboSelect est déjà initialisé, le recréer avec les nouvelles données
     if (this.comboSelect) {
-      console.log('♻️ Recreating ComboSelect with new dataSource');
       this.updateConfig();
     }
   }
 
+  /**
+   * Obtenir les valeurs sélectionnées
+   */
   getValue(): SelectedItem[] {
     return this.comboSelect?.getValue() || [];
   }
 
+  /**
+   * Définir les valeurs sélectionnées
+   */
   setValue(items: SelectedItem[]): void {
     this.comboSelect?.setValue(items);
   }
 
+  /**
+   * Vider toutes les sélections
+   */
   clear(): void {
     this.comboSelect?.clear();
   }
 
+  /**
+   * Ouvrir le dropdown
+   */
   open(): void {
     this.comboSelect?.open();
   }
 
+  /**
+   * Fermer le dropdown
+   */
   close(): void {
     this.comboSelect?.close();
   }
 
+  /**
+   * Obtenir l'état désactivé
+   */
   get disabled(): boolean {
     return this.hasAttribute('disabled');
   }
 
+  /**
+   * Définir l'état désactivé
+   */
   set disabled(value: boolean) {
     if (value) {
       this.setAttribute('disabled', '');
@@ -256,7 +324,9 @@ export class ComboSelectElement extends HTMLElement {
   }
 }
 
-// Définir le custom element
+/**
+ * Enregistrer le custom element
+ */
 if (!customElements.get('combo-select')) {
   customElements.define('combo-select', ComboSelectElement);
 }

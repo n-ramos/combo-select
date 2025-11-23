@@ -10,7 +10,7 @@ import { DEFAULTS, DEFAULT_HTTP_HEADERS, ERROR_MESSAGES, TIMEOUTS } from '../cor
  * Service pour gérer les sources de données
  * @public
  */
-export class DataService<T = any> {
+export class DataService<T = Record<string, unknown>> {
   private config: ComboSelectConfig<T>;
   private cache: Map<string, T[]> = new Map();
   private abortController: AbortController | null = null;
@@ -77,8 +77,9 @@ export class DataService<T = any> {
 
     // Vérifier le cache
     const cacheKey = `${autocompleteUrl}:${query}`;
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
+    const cachedData = this.cache.get(cacheKey);
+    if (cachedData) {
+      return cachedData;
     }
 
     // Annuler la requête précédente si elle existe
@@ -148,7 +149,7 @@ export class DataService<T = any> {
    * @param data - Données brutes de l'API
    * @private
    */
-  private extractResults(data: any): T[] {
+  private extractResults(data: unknown): T[] {
     const { resultsKey, transformResponse } = this.config;
 
     // Si une fonction de transformation est fournie
@@ -156,8 +157,8 @@ export class DataService<T = any> {
       try {
         return transformResponse(data);
       } catch (error) {
-         console.error('Error extracting results:', error);
-        throw new Error(ERROR_MESSAGES.PARSE_ERROR);
+        console.error(error);
+        throw new Error(ERROR_MESSAGES.PARSE_ERROR + ' ');
       }
     }
 
@@ -166,11 +167,11 @@ export class DataService<T = any> {
       try {
         // Support pour les clés imbriquées: "data.items" ou ["data", "items"]
         const keys = Array.isArray(resultsKey) ? resultsKey : resultsKey.split('.');
-        let result = data;
+        let result: unknown = data;
 
         for (const key of keys) {
           if (result && typeof result === 'object' && key in result) {
-            result = result[key];
+            result = (result as Record<string, unknown>)[key];
           } else {
             throw new Error(`Key "${key}" not found in response`);
           }
@@ -224,12 +225,14 @@ export class DataService<T = any> {
    * @private
    */
   private getItemLabel(item: T, labelKey: string): string {
+    // Si c'est une string directement
     if (typeof item === 'string') {
       return item;
     }
 
+    // Si c'est un objet
     if (typeof item === 'object' && item !== null) {
-      const value = (item as any)[labelKey];
+      const value = (item as Record<string, unknown>)[labelKey];
       return value !== undefined && value !== null ? String(value) : '';
     }
 

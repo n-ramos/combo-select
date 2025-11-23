@@ -21,7 +21,7 @@ type SearchErrorCallback = (error: Error) => void;
  * Service pour gérer la recherche
  * @public
  */
-export class SearchService<T = any> {
+export class SearchService<T = Record<string, unknown>> {
   private config: ComboSelectConfig<T>;
   private dataService: DataService<T>;
   private debounceTimer: number | null = null;
@@ -66,7 +66,7 @@ export class SearchService<T = any> {
     const debounceDelay = this.config.debounceDelay ?? DEFAULTS.DEBOUNCE_DELAY;
     
     this.debounceTimer = window.setTimeout(() => {
-      this.performSearch(query);
+      void this.performSearch(query);
     }, debounceDelay);
   }
 
@@ -77,7 +77,7 @@ export class SearchService<T = any> {
   searchImmediate(query: string): void {
     this.cancelDebounce();
     this.lastQuery = query;
-    this.performSearch(query);
+    void this.performSearch(query);
   }
 
   /**
@@ -156,15 +156,16 @@ export class SearchService<T = any> {
 
     return data.map((item) => {
       let label: string;
-      let value: any;
+      let value: unknown;
 
       // Extraire le label
       if (typeof item === 'string') {
         label = item;
         value = item;
       } else if (typeof item === 'object' && item !== null) {
-        label = String((item as any)[labelKey] ?? '');
-        value = valueKey ? (item as any)[valueKey] : (item as any)[labelKey];
+        const itemRecord = item as Record<string, unknown>;
+        label = String(itemRecord[labelKey] ?? '');
+        value = valueKey ? itemRecord[valueKey] : itemRecord[labelKey];
       } else {
         label = String(item);
         value = item;

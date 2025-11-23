@@ -1,257 +1,311 @@
 /**
- * ComboSelect Type Definitions
- * @packageDocumentation
+ * Types et interfaces pour ComboSelect
  */
 
 /**
- * Configuration principale de ComboSelect
- * @typeParam T - Type des items de données
- * @public
+ * Item de suggestion affiché dans le dropdown
  */
-export interface ComboSelectConfig<T = any> {
-    // === Source de données ===
-    /** URL de l'API d'autocomplétion */
-    autocompleteUrl?: string;
-    
-    /** Données locales (tableau ou fonction asynchrone) */
-    dataSource?: T[] | (() => T[] | Promise<T[]>);
-    
-    /** Clé(s) pour accéder aux résultats dans la réponse API */
-    resultsKey?: string | string[];
-    
-    /** Fonction pour transformer la réponse API */
-    transformResponse?: (response: any) => T[];
-    
-    // === Configuration de recherche ===
-    /** Clé du label dans les objets de suggestion */
-    labelSuggestion?: keyof T | string;
-    
-    /** Clé de la valeur dans les objets de suggestion */
-    valueSuggestion?: keyof T | string | null;
-    
-    /** Nombre minimum de caractères avant déclenchement */
-    minChars?: number;
-    
-    /** Délai de debounce en millisecondes */
-    debounceDelay?: number;
-    
-    /** Paramètre de recherche dans l'URL */
-    searchParam?: string;
-    
-    // === Sélection multiple ===
-    /** Activer la sélection multiple */
-    multiple?: boolean;
-    
-    /** Nombre maximum d'items sélectionnables */
-    maxItems?: number;
-    
-    /** Nombre de tags visibles avant affichage du compteur +N */
-    incrementValueSize?: number;
-    
-    // === Comportement ===
-    /** Texte du placeholder */
-    placeholder?: string;
-    
-    /** Fermer la dropdown après sélection */
-    closeOnSelect?: boolean;
-    
-    /** Vider l'input après sélection */
-    clearOnSelect?: boolean;
-    
-    /** Permettre la création de nouvelles valeurs */
-    allowCreate?: boolean;
-    
-    // === HTTP Configuration ===
-    /** Méthode HTTP pour les requêtes */
-    httpMethod?: 'GET' | 'POST';
-    
-    /** En-têtes HTTP personnalisés */
-    httpHeaders?: Record<string, string>;
-    
-    /** URL du CSS personnalisé */
-    cssUrl?: string;
-    
-    // === Callbacks ===
-    /** Callback lors de la création d'une nouvelle valeur */
-    onCreate?: (input: string) => void | Promise<void>;
-    
-    /** Callback lors de la sélection d'un item */
-    onSelect?: (item: SelectedItem<T>) => void | Promise<void>;
-    
-    /** Callback lors de la suppression d'un item */
-    onRemove?: (item: SelectedItem<T>) => void | Promise<void>;
-    
-    /** Callback lors du chargement des données */
-    onLoad?: (data: T[]) => void | Promise<void>;
-    
-    /** Callback lors du changement de valeur */
-    onChange?: (items: SelectedItem<T>[]) => void | Promise<void>;
-    
-    /** Callback lors de l'ouverture de la dropdown */
-    onOpen?: () => void | Promise<void>;
-    
-    /** Callback lors de la fermeture de la dropdown */
-    onClose?: () => void | Promise<void>;
-    
-    /** Callback lors de la recherche */
-    onSearch?: (query: string) => void | Promise<void>;
-    
-    /** Callback lors d'une erreur */
-    onError?: (error: Error) => void | Promise<void>;
-    
-    // === Rendu personnalisé ===
-    /** Fonction de rendu des suggestions */
-    renderSuggestion?: (item: T) => string;
-    
-    /** Fonction de rendu des tags */
-    renderTag?: (item: SelectedItem<T>) => string;
-  }
+export interface SuggestionItem<T = Record<string, unknown>> {
+  label: string;
+  value: unknown;
+  original: T;
+  disabled: boolean;
+  highlighted?: boolean;
+}
+
+/**
+ * Item sélectionné (tag)
+ */
+export interface SelectedItem<T = Record<string, unknown>> {
+  label: string;
+  value: unknown;
+  original: T;
+}
+
+/**
+ * Configuration du ComboSelect
+ */
+export interface ComboSelectConfig<T = Record<string, unknown>> {
+  // ===========================
+  // DATA SOURCE
+  // ===========================
   
   /**
-   * Item sélectionné dans le ComboSelect
-   * @typeParam T - Type de l'objet original
-   * @public
+   * URL de l'API pour l'autocomplétion
    */
-  export interface SelectedItem<T = any> {
-    /** Label affiché */
-    readonly label: string;
-    
-    /** Valeur de l'item */
-    readonly value: any;
-    
-    /** Objet original complet */
-    readonly original: T;
-  }
-  
+  autocompleteUrl?: string;
+
   /**
-   * Item de suggestion dans la dropdown
-   * @typeParam T - Type de l'objet original
-   * @public
+   * Source de données locale (tableau ou fonction)
    */
-  export interface SuggestionItem<T = any> {
-    /** Label affiché */
-    label: string;
-    
-    /** Valeur de l'item */
-    value: any;
-    
-    /** Objet original complet */
-    original: T;
-    
-    /** Item désactivé */
-    disabled?: boolean;
-    
-    /** Item mis en surbrillance */
-    highlighted?: boolean;
-  }
-  
+  dataSource?: T[] | (() => T[] | Promise<T[]>);
+
   /**
-   * Événements disponibles dans ComboSelect
-   * @public
+   * Clé pour extraire les résultats de la réponse API
+   * Peut être une string avec notation point "data.items"
+   * ou un tableau ["data", "items"]
    */
-  export type ComboSelectEvent = 
-    | 'select'
-    | 'remove'
-    | 'load'
-    | 'open'
-    | 'close'
-    | 'search'
-    | 'change'
-    | 'create'
-    | 'navigate'
-    | 'error'
-    | 'disabled'
-    | 'enabled';
-  
+  resultsKey?: string | string[];
+
   /**
-   * Handler d'événement
-   * @internal
+   * Fonction personnalisée pour transformer la réponse API
    */
-  export interface EventHandler {
-    event: ComboSelectEvent;
-    callback: (...args: any[]) => void;
-  }
-  
+  transformResponse?: (response: unknown) => T[];
+
+  // ===========================
+  // DISPLAY
+  // ===========================
+
   /**
-   * API publique de ComboSelect
-   * @typeParam T - Type des items de données
-   * @public
+   * Clé de l'objet à afficher comme label
+   * Supporte la notation point pour les propriétés imbriquées
+   * @default 'label'
    */
-  export interface ComboSelectAPI<T = any> {
-    /** Récupérer les items sélectionnés */
-    getValue(): SelectedItem<T>[];
-    
-    /** Définir les items sélectionnés */
-    setValue(items: SelectedItem<T>[]): void;
-    
-    /** Vider la sélection */
-    clear(): void;
-    
-    /** Ajouter un item */
-    addItem(item: SelectedItem<T>): void;
-    
-    /** Supprimer un item */
-    removeItem(item: SelectedItem<T>): void;
-    
-    /** Ouvrir la dropdown */
-    open(): void;
-    
-    /** Fermer la dropdown */
-    close(): void;
-    
-    /** Désactiver le composant */
-    disable(): void;
-    
-    /** Activer le composant */
-    enable(): void;
-    
-    /** Vider le cache */
-    clearCache(): void;
-    
-    /** Détruire le composant */
-    destroy(): void;
-    
-    /** Vérifier si le composant est désactivé */
-    get disabled(): boolean;
-    
-    /** Vérifier si le composant charge des données */
-    get loading(): boolean;
-  }
-  
+  labelSuggestion?: string;
+
   /**
-   * Extrait le type des items d'une dataSource
-   * @public
+   * Clé de l'objet à utiliser comme valeur
+   * Si null, utilise l'objet entier
+   * @default null
    */
-  export type ExtractDataType<T> = T extends (infer U)[] ? U
-    : T extends () => (infer U)[] ? U
-    : T extends () => Promise<(infer U)[]> ? U
-    : never;
-  
+  valueSuggestion?: string | null;
+
   /**
-   * Configuration avec types inférés
-   * @public
+   * Placeholder de l'input
+   * @default 'Sélectionner...'
    */
-  export type TypedComboSelectConfig<T> = Omit<ComboSelectConfig<T>, 
-    'labelSuggestion' | 'valueSuggestion'> & {
-    labelSuggestion?: keyof T;
-    valueSuggestion?: keyof T | null;
-  };
-  
+  placeholder?: string;
+
+  // ===========================
+  // BEHAVIOR
+  // ===========================
+
   /**
-   * Options de configuration strictes pour l'autocomplétion
-   * @public
+   * Autoriser la sélection multiple avec tags
+   * @default false
    */
-  export interface StrictAutocompleteConfig<T = any> extends ComboSelectConfig<T> {
-    autocompleteUrl: string;
-    searchParam: string;
-    labelSuggestion: keyof T | string;
-  }
-  
+  multiple?: boolean;
+
   /**
-   * Options de configuration strictes pour les données locales
-   * @public
+   * Nombre maximum d'items sélectionnables
    */
-  export interface StrictLocalDataConfig<T = any> extends ComboSelectConfig<T> {
-    dataSource: T[] | (() => T[] | Promise<T[]>);
-    labelSuggestion: keyof T | string;
-  }
+  maxItems?: number;
+
+  /**
+   * Nombre de tags visibles avant d'afficher le compteur "+N"
+   * Si undefined, tous les tags sont affichés
+   */
+  incrementValueSize?: number;
+
+  /**
+   * Nombre minimum de caractères avant de déclencher la recherche
+   * @default 1
+   */
+  minChars?: number;
+
+  /**
+   * Délai de debounce en millisecondes
+   * @default 300
+   */
+  debounceDelay?: number;
+
+  /**
+   * Fermer le dropdown après une sélection
+   * @default true
+   */
+  closeOnSelect?: boolean;
+
+  /**
+   * Vider l'input après une sélection
+   * @default false
+   */
+  clearOnSelect?: boolean;
+
+  /**
+   * Autoriser la création de nouveaux items
+   * @default false
+   */
+  allowCreate?: boolean;
+
+  // ===========================
+  // HTTP CONFIGURATION
+  // ===========================
+
+  /**
+   * Méthode HTTP pour les requêtes API
+   * @default 'GET'
+   */
+  httpMethod?: 'GET' | 'POST';
+
+  /**
+   * Headers HTTP personnalisés pour les requêtes API
+   */
+  httpHeaders?: Record<string, string>;
+
+  /**
+   * Nom du paramètre de recherche dans les requêtes
+   * @default 'q'
+   */
+  searchParam?: string;
+
+  // ===========================
+  // STYLING
+  // ===========================
+
+  /**
+   * URL d'un fichier CSS personnalisé
+   */
+  cssUrl?: string;
+
+  // ===========================
+  // CALLBACKS
+  // ===========================
+
+  /**
+   * Callback appelé lors de la sélection d'un item
+   */
+  onSelect?: (item: SelectedItem<T>) => void | Promise<void>;
+
+  /**
+   * Callback appelé lors de la suppression d'un item
+   */
+  onRemove?: (item: SelectedItem<T>) => void | Promise<void>;
+
+  /**
+   * Callback appelé lors du changement de sélection
+   */
+  onChange?: (items: SelectedItem<T>[]) => void | Promise<void>;
+
+  /**
+   * Callback appelé après le chargement des données
+   */
+  onLoad?: (data: T[]) => void | Promise<void>;
+
+  /**
+   * Callback appelé à l'ouverture du dropdown
+   */
+  onOpen?: () => void | Promise<void>;
+
+  /**
+   * Callback appelé à la fermeture du dropdown
+   */
+  onClose?: () => void | Promise<void>;
+
+  /**
+   * Callback appelé lors d'une recherche
+   */
+  onSearch?: (query: string) => void | Promise<void>;
+
+  /**
+   * Callback appelé lors de la création d'un nouvel item
+   */
+  onCreate?: (input: string) => void | Promise<void>;
+
+  /**
+   * Callback appelé en cas d'erreur
+   */
+  onError?: (error: Error) => void | Promise<void>;
+
+  // ===========================
+  // CUSTOM RENDERING
+  // ===========================
+
+  /**
+   * Fonction pour personnaliser le rendu des suggestions
+   * Doit retourner du HTML sous forme de string
+   */
+  renderSuggestion?: (item: T) => string;
+
+  /**
+   * Fonction pour personnaliser le rendu des tags
+   * Doit retourner du texte ou du HTML sous forme de string
+   */
+  renderTag?: (item: SelectedItem<T>) => string;
+}
+
+/**
+ * Configuration par défaut
+ */
+export const DEFAULT_CONFIG: Partial<ComboSelectConfig> = {
+  placeholder: 'Sélectionner...',
+  multiple: false,
+  minChars: 1,
+  debounceDelay: 300,
+  closeOnSelect: true,
+  clearOnSelect: false,
+  allowCreate: false,
+  httpMethod: 'GET',
+  searchParam: 'q',
+  labelSuggestion: 'label',
+  valueSuggestion: null,
+};
+
+/**
+ * Type pour les événements du ComboSelect
+ */
+export type ComboSelectEvent = 
+  | 'search'
+  | 'select'
+  | 'remove'
+  | 'open'
+  | 'close'
+  | 'navigate'
+  | 'change'
+  | 'load'
+  | 'error';
+
+/**
+ * Type pour les directions de navigation
+ */
+export type NavigationDirection = 'up' | 'down' | 'select';
+
+/**
+ * Type pour les touches du clavier
+ */
+export type KeyboardKey = 
+  | 'Enter'
+  | 'Escape'
+  | 'ArrowUp'
+  | 'ArrowDown'
+  | 'Backspace'
+  | 'Delete'
+  | 'Tab';
+
+/**
+ * Options pour la création de tags
+ */
+export interface TagOptions {
+  removable?: boolean;
+  disabled?: boolean;
+  className?: string;
+}
+
+/**
+ * État du composant
+ */
+export interface ComboSelectState {
+  isOpen: boolean;
+  isLoading: boolean;
+  isDisabled: boolean;
+  query: string;
+  selectedItems: SelectedItem[];
+  suggestions: SuggestionItem[];
+  focusedIndex: number;
+}
+
+/**
+ * Résultat de validation
+ */
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+/**
+ * Options pour le rendu
+ */
+export interface RenderOptions {
+  className?: string;
+  attributes?: Record<string, string>;
+  innerHTML?: string;
+}

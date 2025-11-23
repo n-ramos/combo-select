@@ -9,6 +9,9 @@ import { Dropdown } from '@components/Dropdown';
 import { TagList } from '@components/TagList';
 import { DOMHelpers } from '@utils/DOMHelpers';
 
+// Type pour les données génériques du ComboSelect
+type ComboSelectData = Record<string, unknown>;
+
 export class ComboSelect {
   private originalInput: HTMLInputElement;
   public config: Config;
@@ -18,11 +21,11 @@ export class ComboSelect {
   private tagsContainer: HTMLElement;
   private hiddenInput: HTMLInputElement;
   private rootElement: Document | ShadowRoot;
-  private clickHandler?: (e: Event) => void; // ← AJOUT
+  private clickHandler?: (e: Event) => void;
   
-  // Services
-  private dataService: DataService<any>;
-  private searchService: SearchService<any>;
+  // Services - Utiliser un type générique plutôt que any
+  private dataService: DataService<ComboSelectData>;
+  private searchService: SearchService<ComboSelectData>;
   private renderService: RenderService;
   
   // Components
@@ -55,9 +58,13 @@ export class ComboSelect {
     this.events = new EventEmitter();
     this.isDisabled = false;
 
+    // Initialiser les services avec le type générique
     const fullConfig = this.config.getAll();
-    this.dataService = new DataService<any>(fullConfig as any);
-    this.searchService = new SearchService<any>(fullConfig as any, this.dataService);
+    this.dataService = new DataService<ComboSelectData>(fullConfig as ComboSelectConfig<ComboSelectData>);
+    this.searchService = new SearchService<ComboSelectData>(
+      fullConfig as ComboSelectConfig<ComboSelectData>, 
+      this.dataService
+    );
     this.renderService = new RenderService(this.config);
 
     this.container = this.createContainer();
@@ -118,7 +125,8 @@ export class ComboSelect {
   }
 
   private setupSearchCallbacks(): void {
-    this.searchService.setOnResults((suggestions: SuggestionItem<any>[]) => {
+    // Callback pour les résultats de recherche - Typage explicite
+    this.searchService.setOnResults((suggestions: SuggestionItem<ComboSelectData>[]) => {
       const selected = this.tagList.getItems();
       const selectedValues = new Set(selected.map(item => JSON.stringify(item.value)));
       
@@ -136,7 +144,6 @@ export class ComboSelect {
     });
 
     this.searchService.setOnSearchStart(() => {
-    
       this.dropdown.renderLoading();
     });
 
@@ -144,55 +151,59 @@ export class ComboSelect {
 
   private attachEvents(): void {
     // Événement de recherche
-    this.events.on('search', async (query: string) => {
-      this.searchService.search(query);
+    this.events.on('search', (query: unknown) => {
+      if (typeof query === 'string') {
+        this.searchService.search(query);
+      }
     });
 
     // Événement de sélection
-    this.events.on('select', async (item: SelectedItem) => {
-      await this.handleSelect(item);
+    this.events.on('select', (item: unknown) => {
+      if (this.isSelectedItem(item)) {
+        void this.handleSelect(item);
+      }
     });
 
     // Événement de suppression
-    this.events.on('remove', async (item: SelectedItem) => {
-      this.tagList.remove(item);
-      this.updateHiddenInput();
-      this.input.focus();
-      
-      const onRemove = this.config.get('onRemove');
-      if (onRemove) {
-        await onRemove(item);
-      }
+    this.events.on('remove', (item: unknown) => {
+      if (this.isSelectedItem(item)) {
+        this.tagList.remove(item);
+        this.updateHiddenInput();
+        this.input.focus();
+        
+        const onRemove = this.config.get('onRemove');
+        if (onRemove) {
+          void onRemove(item);
+        }
 
-      const onChange = this.config.get('onChange');
-      if (onChange) {
-        await onChange(this.getValue());
+        const onChange = this.config.get('onChange');
+        if (onChange) {
+          void onChange(this.getValue());
+        }
       }
     });
 
     // Événements d'ouverture/fermeture
-    this.events.on('open', async () => {
+    this.events.on('open', () => {
       this.input.setAriaExpanded(true);
       
       const callback = this.config.get('onOpen');
       if (callback) {
-        await callback();
+        void callback();
       }
     });
 
-    this.events.on('close', async () => {
+    this.events.on('close', () => {
       this.dropdown.close();
       this.input.setAriaExpanded(false);
       
       const callback = this.config.get('onClose');
       if (callback) {
-        await callback();
+        void callback();
       }
     });
 
-    // ========================================
-    // FERMER AU CLIC EXTÉRIEUR - VERSION ROBUSTE
-    // ========================================
+    // Fermer au clic extérieur - VERSION ROBUSTE
     this.clickHandler = (e: Event) => {
       const mouseEvent = e as MouseEvent;
       
@@ -202,7 +213,6 @@ export class ComboSelect {
       // Vérifier si le clic est dans notre composant
       let isInside = false;
       
-      // Méthode 1: Vérifier dans le composedPath
       for (const element of path) {
         if (element === this.container) {
           isInside = true;
@@ -210,28 +220,20 @@ export class ComboSelect {
         }
       }
       
-      // Méthode 2: Fallback avec contains (pour les navigateurs plus anciens)
       if (!isInside && mouseEvent.target) {
         isInside = this.container.contains(mouseEvent.target as Node);
       }
       
-      // Si le clic est en dehors ET que le dropdown est ouvert, le fermer
       if (!isInside && this.dropdown.isDropdownOpen()) {
         this.dropdown.close();
       }
     };
 
-    // Attacher au document en phase de capture pour intercepter tous les clics
-    // true = capture phase (important pour Shadow DOM)
     document.addEventListener('click', this.clickHandler as EventListener, true);
 
-    // ========================================
-    // BONUS: Fermer au blur avec délai
-    // ========================================
+    // Fermer au blur avec délai
     this.input.getElement().addEventListener('blur', () => {
-      // Petit délai pour permettre aux clics sur les options de fonctionner
       setTimeout(() => {
-        // Vérifier si le focus n'est pas dans le composant
         const activeElement = document.activeElement;
         const shadowActiveElement = this.rootElement instanceof ShadowRoot 
           ? this.rootElement.activeElement 
@@ -247,6 +249,17 @@ export class ComboSelect {
     });
   }
 
+  // Type guard pour vérifier si un objet est un SelectedItem
+  private isSelectedItem(item: unknown): item is SelectedItem {
+    return (
+      typeof item === 'object' &&
+      item !== null &&
+      'label' in item &&
+      'value' in item &&
+      typeof (item as SelectedItem).label === 'string'
+    );
+  }
+
   private async handleSelect(item: SelectedItem): Promise<void> {
     const multiple = this.config.get('multiple');
 
@@ -260,7 +273,7 @@ export class ComboSelect {
     }
 
     if (this.tagList.hasItem(item)) {
-      console.log('Item already selected, skipping:', item);
+      console.warn('Item already selected, skipping:', item);
       return;
     }
 
@@ -351,9 +364,6 @@ export class ComboSelect {
   }
 
   public destroy(): void {
-    // ========================================
-    // IMPORTANT: Retirer le click handler
-    // ========================================
     if (this.clickHandler) {
       document.removeEventListener('click', this.clickHandler as EventListener, true);
     }
