@@ -1,7 +1,7 @@
-var b = Object.defineProperty;
-var w = (a, e, t) => e in a ? b(a, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : a[e] = t;
-var i = (a, e, t) => w(a, typeof e != "symbol" ? e + "" : e, t);
-class m {
+var x = Object.defineProperty;
+var C = (l, e, t) => e in l ? x(l, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : l[e] = t;
+var r = (l, e, t) => C(l, typeof e != "symbol" ? e + "" : e, t);
+class v {
   static validateConfig(e) {
     if (e.maxItems !== void 0 && e.maxItems < 1)
       throw new Error("maxItems must be greater than 0");
@@ -21,11 +21,11 @@ class m {
     }
   }
 }
-const d = class d {
+const b = class b {
   constructor(e) {
-    i(this, "config");
-    m.validateConfig(e), this.config = {
-      ...d.DEFAULT_CONFIG,
+    r(this, "config");
+    v.validateConfig(e), this.config = {
+      ...b.DEFAULT_CONFIG,
       ...e
     };
   }
@@ -36,13 +36,13 @@ const d = class d {
     return Object.freeze({ ...this.config });
   }
   update(e) {
-    m.validateConfig(e), this.config = {
+    v.validateConfig(e), this.config = {
       ...this.config,
       ...e
     };
   }
 };
-i(d, "DEFAULT_CONFIG", {
+r(b, "DEFAULT_CONFIG", {
   placeholder: "Sélectionner...",
   minChars: 1,
   debounceDelay: 300,
@@ -58,26 +58,26 @@ i(d, "DEFAULT_CONFIG", {
     "Content-Type": "application/json"
   }
 });
-let g = d;
-class S {
+let f = b;
+class I {
   constructor() {
-    i(this, "events");
+    r(this, "events");
     this.events = /* @__PURE__ */ new Map();
   }
   on(e, t) {
     this.events.has(e) || this.events.set(e, /* @__PURE__ */ new Set()), this.events.get(e).add(t);
   }
   off(e, t) {
-    const s = this.events.get(e);
-    s && s.delete(t);
+    const o = this.events.get(e);
+    o && o.delete(t);
   }
   emit(e, ...t) {
-    const s = this.events.get(e);
-    s && s.forEach((n) => {
+    const o = this.events.get(e);
+    o && o.forEach((i) => {
       try {
-        n(...t);
-      } catch (r) {
-        console.error(`Error in event handler for "${e}":`, r);
+        i(...t);
+      } catch (n) {
+        console.error(`Error in event handler for "${e}":`, n);
       }
     });
   }
@@ -85,126 +85,443 @@ class S {
     this.events.clear();
   }
 }
-class E {
+const p = {
+  /** Placeholder par défaut */
+  PLACEHOLDER: "Sélectionner...",
+  /** Nombre minimum de caractères avant recherche */
+  MIN_CHARS: 1,
+  /** Délai de debounce en millisecondes */
+  DEBOUNCE_DELAY: 300,
+  /** Méthode HTTP par défaut */
+  HTTP_METHOD: "GET",
+  /** Paramètre de recherche par défaut */
+  SEARCH_PARAM: "q",
+  /** Clé de label par défaut */
+  LABEL_KEY: "label",
+  /** Hauteur d'un item dans la liste (pour virtual scrolling) */
+  ITEM_HEIGHT: 40,
+  /** Nombre d'items visibles dans la dropdown */
+  VISIBLE_ITEMS: 10
+}, V = {
+  // Container
+  CONTAINER: "comboselect-container",
+  // Control
+  CONTROL: "comboselect-control",
+  CONTROL_OPEN: "comboselect-control--open",
+  CONTROL_DISABLED: "comboselect-control--disabled",
+  CONTROL_LOADING: "comboselect-control--loading",
+  // Input
+  INPUT: "comboselect-input",
+  INPUT_WRAPPER: "comboselect-input-wrapper",
+  // Dropdown
+  DROPDOWN: "comboselect-dropdown",
+  DROPDOWN_OPEN: "comboselect-dropdown--open",
+  // Suggestions
+  SUGGESTIONS: "comboselect-suggestions",
+  SUGGESTION_ITEM: "comboselect-suggestion",
+  SUGGESTION_ACTIVE: "comboselect-suggestion--active",
+  SUGGESTION_DISABLED: "comboselect-suggestion--disabled",
+  // Tags
+  TAGS_CONTAINER: "comboselect-tags",
+  TAG: "comboselect-tag",
+  TAG_LABEL: "comboselect-tag-label",
+  TAG_REMOVE: "comboselect-tag-remove",
+  TAG_COUNTER: "comboselect-tag-counter",
+  // States
+  LOADING: "comboselect-loading",
+  LOADING_SPINNER: "comboselect-loading-spinner",
+  NO_RESULTS: "comboselect-no-results",
+  ERROR: "comboselect-error",
+  // Utilities
+  DISABLED: "disabled",
+  OPEN: "open",
+  HIDDEN: "hidden"
+}, B = {
+  SELECT: "select",
+  REMOVE: "remove",
+  CHANGE: "change",
+  OPEN: "open",
+  CLOSE: "close",
+  SEARCH: "search",
+  ERROR: "error",
+  LOAD: "load",
+  CREATE: "create",
+  NAVIGATE: "navigate",
+  DISABLED: "disabled",
+  ENABLED: "enabled"
+}, G = {
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
+  ENTER: "Enter",
+  ESCAPE: "Escape",
+  BACKSPACE: "Backspace",
+  TAB: "Tab",
+  DELETE: "Delete"
+}, j = {
+  ROLE_COMBOBOX: "combobox",
+  ROLE_LISTBOX: "listbox",
+  ROLE_OPTION: "option",
+  AUTOCOMPLETE: "list",
+  EXPANDED: "aria-expanded",
+  HASPOPUP: "aria-haspopup",
+  ACTIVEDESCENDANT: "aria-activedescendant",
+  SELECTED: "aria-selected",
+  DISABLED: "aria-disabled",
+  LABEL: "aria-label",
+  LABELLEDBY: "aria-labelledby"
+}, u = {
+  INVALID_SELECTOR: "Invalid selector: element not found",
+  NOT_INPUT_ELEMENT: "Element must be an input element",
+  MAX_ITEMS_INVALID: "maxItems must be greater than 0",
+  MIN_CHARS_INVALID: "minChars cannot be negative",
+  DEBOUNCE_INVALID: "debounceDelay cannot be negative",
+  INCREMENT_SIZE_INVALID: "incrementValueSize must be greater than 0",
+  NO_DATA_SOURCE: "Neither autocompleteUrl nor dataSource provided",
+  FETCH_ERROR: "Error fetching data",
+  PARSE_ERROR: "Error parsing response"
+}, k = {
+  "Content-Type": "application/json",
+  Accept: "application/json"
+}, A = {
+  /** Délai avant fermeture automatique du dropdown (ms) */
+  AUTO_CLOSE: 5e3,
+  /** Délai d'animation CSS (ms) */
+  ANIMATION: 200,
+  /** Délai avant retry en cas d'erreur (ms) */
+  RETRY_DELAY: 1e3,
+  /** Timeout pour les requêtes HTTP (ms) */
+  HTTP_TIMEOUT: 1e4
+};
+class O {
   constructor(e) {
-    i(this, "config");
-    i(this, "abortController");
-    i(this, "cache");
-    this.config = e, this.cache = /* @__PURE__ */ new Map();
+    r(this, "config");
+    r(this, "cache", /* @__PURE__ */ new Map());
+    r(this, "abortController", null);
+    this.config = e;
   }
-  async fetch(e) {
-    const t = this.config.get("dataSource");
-    if (t)
-      return this.fetchFromDataSource(e, t);
-    const s = this.config.get("autocompleteUrl");
-    return s ? this.fetchFromUrl(e, s) : [];
+  /**
+   * Charger les données selon la configuration
+   * @param query - Requête de recherche (pour API)
+   * @returns Promesse avec les données
+   */
+  async loadData(e) {
+    if (this.config.dataSource)
+      return this.loadLocalData();
+    if (this.config.autocompleteUrl)
+      return this.loadRemoteData(e || "");
+    throw new Error(u.NO_DATA_SOURCE);
   }
-  async fetchFromDataSource(e, t) {
-    let s;
-    typeof t == "function" ? s = await t() : s = t;
-    const n = this.config.get("labelSuggestion") || "label", r = e.toLowerCase();
-    return s.filter((l) => {
-      const o = this.getNestedValue(l, n);
-      return String(o).toLowerCase().includes(r);
-    });
+  /**
+   * Charger les données locales
+   * @private
+   */
+  async loadLocalData() {
+    const { dataSource: e } = this.config;
+    if (!e)
+      return [];
+    if (typeof e == "function") {
+      const t = e();
+      return t instanceof Promise ? await t : t;
+    }
+    return e;
   }
-  async fetchFromUrl(e, t) {
+  /**
+   * Charger les données depuis une API
+   * @param query - Requête de recherche
+   * @private
+   */
+  async loadRemoteData(e) {
+    const { autocompleteUrl: t, searchParam: o, httpMethod: i, httpHeaders: n } = this.config;
+    if (!t)
+      throw new Error(u.NO_DATA_SOURCE);
     const s = `${t}:${e}`;
     if (this.cache.has(s))
       return this.cache.get(s);
-    this.abortController?.abort(), this.abortController = new AbortController();
-    const n = this.config.get("httpMethod") || "GET", r = this.config.get("searchParam") || "q", l = this.config.get("httpHeaders") || {};
+    this.abortController && this.abortController.abort(), this.abortController = new AbortController();
     try {
-      let o = t, h = {
-        method: n,
-        headers: l,
-        signal: this.abortController.signal
+      let a = t, h = {
+        signal: this.abortController.signal,
+        headers: {
+          ...k,
+          ...n
+        }
       };
-      if (n === "GET") {
-        const v = t.includes("?") ? "&" : "?";
-        o = `${t}${v}${r}=${encodeURIComponent(e)}`;
+      const m = i || p.HTTP_METHOD, d = o || p.SEARCH_PARAM;
+      if (m === "GET") {
+        const S = a.includes("?") ? "&" : "?";
+        a = `${a}${S}${d}=${encodeURIComponent(e)}`, h.method = "GET";
       } else
-        h.body = JSON.stringify({ [r]: e });
-      const u = await fetch(o, h);
-      if (!u.ok)
-        throw new Error(`HTTP error! status: ${u.status}`);
-      const p = await u.json(), f = this.extractResults(p);
-      return this.cache.set(s, f), f;
-    } catch (o) {
-      if (o instanceof Error && o.name === "AbortError")
-        return [];
-      throw console.error("Error fetching data:", o), o;
+        h.method = "POST", h.body = JSON.stringify({ [d]: e });
+      const E = setTimeout(() => {
+        this.abortController?.abort();
+      }, A.HTTP_TIMEOUT), g = await fetch(a, h);
+      if (clearTimeout(E), !g.ok)
+        throw new Error(`${u.FETCH_ERROR}: ${g.status} ${g.statusText}`);
+      const y = await g.json(), w = this.extractResults(y);
+      return this.cache.set(s, w), w;
+    } catch (a) {
+      if (a instanceof Error) {
+        if (a.name === "AbortError")
+          return [];
+        throw new Error(`${u.FETCH_ERROR}: ${a.message}`);
+      }
+      throw a;
     }
   }
   /**
-   * NOUVEAU : Extrait les résultats d'une réponse API selon la configuration
+   * Extraire les résultats de la réponse API
+   * @param data - Données brutes de l'API
+   * @private
    */
   extractResults(e) {
-    const t = this.config.get("transformResponse");
+    const { resultsKey: t, transformResponse: o } = this.config;
+    if (o)
+      try {
+        return o(e);
+      } catch {
+        throw new Error(u.PARSE_ERROR);
+      }
     if (t)
-      return t(e);
+      try {
+        const i = Array.isArray(t) ? t : t.split(".");
+        let n = e;
+        for (const s of i)
+          if (n && typeof n == "object" && s in n)
+            n = n[s];
+          else
+            throw new Error(`Key "${s}" not found in response`);
+        if (Array.isArray(n))
+          return n;
+        throw new Error("Results is not an array");
+      } catch (i) {
+        throw console.error("Error extracting results:", i), new Error(u.PARSE_ERROR);
+      }
     if (Array.isArray(e))
       return e;
-    const s = this.config.get("resultsKey");
-    if (s) {
-      if (Array.isArray(s)) {
-        let o = e;
-        for (const h of s)
-          if (o = o?.[h], !o) break;
-        return Array.isArray(o) ? o : [];
-      }
-      const l = this.getNestedValue(e, s);
-      return Array.isArray(l) ? l : [];
+    throw new Error(u.PARSE_ERROR);
+  }
+  /**
+   * Filtrer les données localement
+   * @param data - Données à filtrer
+   * @param query - Requête de recherche
+   * @returns Données filtrées
+   */
+  filterData(e, t) {
+    if (!t || t.trim() === "")
+      return e;
+    const o = t.toLowerCase().trim(), { labelSuggestion: i } = this.config, n = i || p.LABEL_KEY;
+    return e.filter((s) => this.getItemLabel(s, n).toLowerCase().includes(o));
+  }
+  /**
+   * Obtenir le label d'un item
+   * @param item - Item
+   * @param labelKey - Clé du label
+   * @private
+   */
+  getItemLabel(e, t) {
+    if (typeof e == "string")
+      return e;
+    if (typeof e == "object" && e !== null) {
+      const o = e[t];
+      return o != null ? String(o) : "";
     }
-    const n = ["results", "items", "data", "list", "records", "rows"];
-    for (const l of n)
-      if (e[l] && Array.isArray(e[l]))
-        return e[l];
-    const r = Object.keys(e);
-    return r.length === 1 && Array.isArray(e[r[0]]) ? e[r[0]] : (console.warn("Could not extract results from API response. Consider using resultsKey or transformResponse config.", e), []);
+    return String(e);
   }
-  getNestedValue(e, t) {
-    return t.split(".").reduce((s, n) => s?.[n], e);
-  }
+  /**
+   * Vider le cache
+   */
   clearCache() {
     this.cache.clear();
   }
+  /**
+   * Annuler les requêtes en cours
+   */
   abort() {
-    this.abortController?.abort();
+    this.abortController && (this.abortController.abort(), this.abortController = null);
+  }
+  /**
+   * Obtenir la taille du cache
+   */
+  getCacheSize() {
+    return this.cache.size;
+  }
+  /**
+   * Supprimer une entrée du cache
+   * @param query - Requête à supprimer du cache
+   */
+  removeCacheEntry(e) {
+    const { autocompleteUrl: t } = this.config;
+    if (t) {
+      const o = `${t}:${e}`;
+      this.cache.delete(o);
+    }
   }
 }
-class y {
-  constructor(e) {
-    i(this, "config");
-    this.config = e;
+class T {
+  constructor(e, t) {
+    r(this, "config");
+    r(this, "dataService");
+    r(this, "debounceTimer", null);
+    r(this, "lastQuery", "");
+    r(this, "isSearching", !1);
+    // Callbacks
+    r(this, "onResults", null);
+    r(this, "onError", null);
+    r(this, "onSearchStart", null);
+    r(this, "onSearchEnd", null);
+    this.config = e, this.dataService = t;
   }
-  parseResults(e) {
-    const t = this.config.get("labelSuggestion") || "label", s = this.config.get("valueSuggestion");
-    return e.map((r) => {
-      const l = this.getNestedValue(r, t), o = s ? this.getNestedValue(r, s) : r;
-      return {
-        label: String(l),
-        value: o,
-        original: r
+  /**
+   * Effectuer une recherche
+   * @param query - Requête de recherche
+   */
+  search(e) {
+    const t = this.config.minChars ?? p.MIN_CHARS;
+    if (e.length < t) {
+      this.clearResults();
+      return;
+    }
+    if (e === this.lastQuery)
+      return;
+    this.lastQuery = e, this.cancelDebounce();
+    const o = this.config.debounceDelay ?? p.DEBOUNCE_DELAY;
+    this.debounceTimer = window.setTimeout(() => {
+      this.performSearch(e);
+    }, o);
+  }
+  /**
+   * Effectuer la recherche immédiatement (sans debounce)
+   * @param query - Requête de recherche
+   */
+  searchImmediate(e) {
+    this.cancelDebounce(), this.lastQuery = e, this.performSearch(e);
+  }
+  /**
+   * Effectuer la recherche réelle
+   * @param query - Requête de recherche
+   * @private
+   */
+  async performSearch(e) {
+    if (!this.isSearching) {
+      if (this.isSearching = !0, this.onSearchStart?.(), this.config.onSearch)
+        try {
+          await this.config.onSearch(e);
+        } catch (t) {
+          console.error("Error in onSearch callback:", t);
+        }
+      try {
+        const t = await this.dataService.loadData(e);
+        let o = t;
+        this.config.dataSource && (o = this.dataService.filterData(t, e));
+        const i = this.transformToSuggestions(o);
+        if (this.onResults?.(i), this.config.onLoad)
+          try {
+            await this.config.onLoad(o);
+          } catch (n) {
+            console.error("Error in onLoad callback:", n);
+          }
+      } catch (t) {
+        const o = t instanceof Error ? t : new Error("Search failed");
+        if (this.onError?.(o), this.config.onError)
+          try {
+            await this.config.onError(o);
+          } catch (i) {
+            console.error("Error in onError callback:", i);
+          }
+      } finally {
+        this.isSearching = !1, this.onSearchEnd?.();
+      }
+    }
+  }
+  /**
+   * Transformer les données en SuggestionItems
+   * @param data - Données brutes
+   * @private
+   */
+  transformToSuggestions(e) {
+    const { labelSuggestion: t, valueSuggestion: o } = this.config, i = t || p.LABEL_KEY, n = o;
+    return e.map((s) => {
+      let a, h;
+      return typeof s == "string" ? (a = s, h = s) : typeof s == "object" && s !== null ? (a = String(s[i] ?? ""), h = n ? s[n] : s[i]) : (a = String(s), h = s), {
+        label: a,
+        value: h,
+        original: s,
+        disabled: !1,
+        highlighted: !1
       };
     });
   }
-  filterSelected(e, t) {
-    if (!this.config.get("multiple"))
-      return e;
-    const s = new Set(t.map((r) => JSON.stringify(r.value)));
-    return e.filter((r) => !s.has(JSON.stringify(r.value)));
+  /**
+   * Vider les résultats
+   */
+  clearResults() {
+    this.lastQuery = "", this.onResults?.([]);
   }
-  getNestedValue(e, t) {
-    return t.split(".").reduce((n, r) => n?.[r], e);
+  /**
+   * Annuler le debounce en cours
+   */
+  cancelDebounce() {
+    this.debounceTimer !== null && (clearTimeout(this.debounceTimer), this.debounceTimer = null);
+  }
+  /**
+   * Annuler toutes les requêtes en cours
+   */
+  abort() {
+    this.cancelDebounce(), this.dataService.abort(), this.isSearching = !1;
+  }
+  /**
+   * Définir le callback pour les résultats
+   * @param callback - Fonction appelée avec les résultats
+   */
+  setOnResults(e) {
+    this.onResults = e;
+  }
+  /**
+   * Définir le callback pour les erreurs
+   * @param callback - Fonction appelée en cas d'erreur
+   */
+  setOnError(e) {
+    this.onError = e;
+  }
+  /**
+   * Définir le callback pour le début de recherche
+   * @param callback - Fonction appelée au début de la recherche
+   */
+  setOnSearchStart(e) {
+    this.onSearchStart = e;
+  }
+  /**
+   * Définir le callback pour la fin de recherche
+   * @param callback - Fonction appelée à la fin de la recherche
+   */
+  setOnSearchEnd(e) {
+    this.onSearchEnd = e;
+  }
+  /**
+   * Vérifier si une recherche est en cours
+   */
+  get searching() {
+    return this.isSearching;
+  }
+  /**
+   * Obtenir la dernière requête
+   */
+  getLastQuery() {
+    return this.lastQuery;
+  }
+  /**
+   * Réinitialiser le service
+   */
+  reset() {
+    this.abort(), this.clearResults(), this.lastQuery = "";
   }
 }
 class c {
-  static createElement(e, t, s) {
-    const n = document.createElement(e);
-    return t && (n.className = t), s && Object.entries(s).forEach(([r, l]) => {
-      n.setAttribute(r, l);
-    }), n;
+  static createElement(e, t, o) {
+    const i = document.createElement(e);
+    return t && (i.className = t), o && Object.entries(o).forEach(([n, s]) => {
+      i.setAttribute(n, s);
+    }), i;
   }
   static removeAllChildren(e) {
     for (; e.firstChild; )
@@ -222,18 +539,18 @@ class c {
     };
   }
   static isDescendant(e, t) {
-    let s = t;
-    for (; s; ) {
-      if (s === e)
+    let o = t;
+    for (; o; ) {
+      if (o === e)
         return !0;
-      s = s.parentElement;
+      o = o.parentElement;
     }
     return !1;
   }
 }
-class C {
+class L {
   constructor(e) {
-    i(this, "config");
+    r(this, "config");
     this.config = e;
   }
   renderSuggestion(e) {
@@ -256,23 +573,23 @@ class C {
     `;
   }
 }
-function I(a, e) {
+function R(l, e) {
   let t = null;
-  return function(...n) {
-    const r = () => {
-      t = null, a(...n);
+  return function(...i) {
+    const n = () => {
+      t = null, l(...i);
     };
-    t && clearTimeout(t), t = setTimeout(r, e);
+    t && clearTimeout(t), t = setTimeout(n, e);
   };
 }
-class L {
+class D {
   constructor(e, t) {
-    i(this, "element");
-    i(this, "config");
-    i(this, "events");
-    i(this, "debouncedSearch");
-    this.config = e, this.events = t, this.element = this.create(), this.debouncedSearch = I(
-      (s) => this.handleSearch(s),
+    r(this, "element");
+    r(this, "config");
+    r(this, "events");
+    r(this, "debouncedSearch");
+    this.config = e, this.events = t, this.element = this.create(), this.debouncedSearch = R(
+      (o) => this.handleSearch(o),
       e.get("debounceDelay") || 300
     ), this.attachEvents();
   }
@@ -289,8 +606,8 @@ class L {
   }
   attachEvents() {
     this.element.addEventListener("input", (e) => {
-      const s = e.target.value.trim(), n = this.config.get("minChars") || 1;
-      s.length >= n ? this.debouncedSearch(s) : s.length === 0 && this.events.emit("close");
+      const o = e.target.value.trim(), i = this.config.get("minChars") || 1;
+      o.length >= i ? this.debouncedSearch(o) : o.length === 0 && this.events.emit("close");
     }), this.element.addEventListener("focus", () => {
       const e = this.element.value.trim(), t = this.config.get("minChars") || 1;
       e.length >= t && this.handleSearch(e);
@@ -345,16 +662,15 @@ class L {
     this.element.remove();
   }
 }
-class x {
-  constructor(e, t, s) {
-    i(this, "element");
-    // Suppression de la ligne inutilisée 'config'
-    i(this, "events");
-    i(this, "renderService");
-    i(this, "suggestions");
-    i(this, "focusedIndex");
-    i(this, "isOpen");
-    this.events = t, this.renderService = s, this.suggestions = [], this.focusedIndex = -1, this.isOpen = !1, this.element = this.create(), this.attachEvents();
+class N {
+  constructor(e, t) {
+    r(this, "element");
+    r(this, "events");
+    r(this, "renderService");
+    r(this, "suggestions");
+    r(this, "focusedIndex");
+    r(this, "isOpen");
+    this.events = e, this.renderService = t, this.suggestions = [], this.focusedIndex = -1, this.isOpen = !1, this.element = this.create(), this.attachEvents();
   }
   create() {
     return c.createElement("div", "comboselect-dropdown hidden", {
@@ -373,29 +689,28 @@ class x {
     this.isOpen && (this.element.classList.add("hidden"), this.isOpen = !1, this.focusedIndex = -1, this.events.emit("close"));
   }
   render(e) {
-    if (console.log("🎨 Dropdown.render called with suggestions:", e), console.log("📊 Number of suggestions:", e.length), this.suggestions = e, this.focusedIndex = -1, c.removeAllChildren(this.element), e.length === 0) {
-      console.log('⚠️ No suggestions - showing "no results" message'), this.element.innerHTML = this.renderService.renderNoResults(), this.open();
+    if (this.suggestions = e, this.focusedIndex = -1, c.removeAllChildren(this.element), e.length === 0) {
+      this.element.innerHTML = this.renderService.renderNoResults(), this.open();
       return;
     }
-    console.log("✅ Rendering", e.length, "suggestions"), e.forEach((t, s) => {
-      console.log(`  → Creating option ${s}:`, t);
-      const n = this.createOption(t, s);
-      this.element.appendChild(n);
+    e.forEach((t, o) => {
+      const i = this.createOption(t, o);
+      this.element.appendChild(i);
     }), this.open();
   }
   renderLoading() {
     c.removeAllChildren(this.element), this.element.innerHTML = this.renderService.renderLoading(), this.open();
   }
   createOption(e, t) {
-    const s = c.createElement("div", "comboselect-option", {
+    const o = c.createElement("div", "comboselect-option", {
       role: "option",
       "data-index": String(t)
     });
-    return s.innerHTML = this.renderService.renderSuggestion(e), e.disabled && (s.classList.add("disabled"), s.setAttribute("aria-disabled", "true")), s.addEventListener("mousedown", (n) => {
-      n.preventDefault(), e.disabled || this.selectOption(t);
-    }), s.addEventListener("mouseenter", () => {
+    return o.innerHTML = this.renderService.renderSuggestion(e), e.disabled && (o.classList.add("disabled"), o.setAttribute("aria-disabled", "true")), o.addEventListener("mousedown", (i) => {
+      i.preventDefault(), e.disabled || this.selectOption(t);
+    }), o.addEventListener("mouseenter", () => {
       e.disabled || this.focusOption(t);
-    }), s;
+    }), o;
   }
   handleNavigation(e) {
     if (!this.isOpen || this.suggestions.length === 0)
@@ -405,11 +720,11 @@ class x {
       return;
     }
     const t = this.suggestions.length - 1;
-    let s = this.focusedIndex;
-    for (e === "down" ? s = this.focusedIndex < t ? this.focusedIndex + 1 : 0 : e === "up" && (s = this.focusedIndex > 0 ? this.focusedIndex - 1 : t); this.suggestions[s]?.disabled; )
-      if (e === "down" ? s = s < t ? s + 1 : 0 : s = s > 0 ? s - 1 : t, s === this.focusedIndex)
+    let o = this.focusedIndex;
+    for (e === "down" ? o = this.focusedIndex < t ? this.focusedIndex + 1 : 0 : e === "up" && (o = this.focusedIndex > 0 ? this.focusedIndex - 1 : t); this.suggestions[o]?.disabled; )
+      if (e === "down" ? o = o < t ? o + 1 : 0 : o = o > 0 ? o - 1 : t, o === this.focusedIndex)
         return;
-    this.focusOption(s);
+    this.focusOption(o);
   }
   focusOption(e) {
     this.focusedIndex >= 0 && this.element.querySelector(`[data-index="${this.focusedIndex}"]`)?.classList.remove("focused"), this.focusedIndex = e;
@@ -434,25 +749,25 @@ class x {
     this.close(), this.element.remove();
   }
 }
-class O {
-  constructor(e, t, s) {
-    i(this, "element");
-    i(this, "item");
-    i(this, "events");
-    this.item = e, this.events = s, this.element = this.create(t);
+class _ {
+  constructor(e, t, o) {
+    r(this, "element");
+    r(this, "item");
+    r(this, "events");
+    this.item = e, this.events = o, this.element = this.create(t);
   }
   create(e) {
     const t = c.createElement("span", "comboselect-tag");
     t.setAttribute("data-value", JSON.stringify(this.item.value));
-    const s = c.createElement("span");
-    s.innerHTML = e, t.appendChild(s);
-    const n = c.createElement("button", "comboselect-tag-remove", {
+    const o = c.createElement("span");
+    o.innerHTML = e, t.appendChild(o);
+    const i = c.createElement("button", "comboselect-tag-remove", {
       type: "button",
       "aria-label": `Retirer ${this.item.label}`
     });
-    return n.innerHTML = "&times;", n.addEventListener("click", (r) => {
-      r.stopPropagation(), this.remove();
-    }), t.appendChild(n), t;
+    return i.innerHTML = "&times;", i.addEventListener("click", (n) => {
+      n.stopPropagation(), this.remove();
+    }), t.appendChild(i), t;
   }
   remove() {
     this.events.emit("remove", this.item), this.element.remove();
@@ -467,61 +782,43 @@ class O {
     this.element.remove();
   }
 }
-class A {
-  constructor(e, t, s, n) {
-    i(this, "container");
-    i(this, "config");
-    i(this, "events");
-    i(this, "renderService");
-    i(this, "tags");
-    i(this, "counterElement");
-    this.container = e, this.config = t, this.events = s, this.renderService = n, this.tags = [];
+class H {
+  constructor(e, t, o, i) {
+    r(this, "container");
+    r(this, "config");
+    r(this, "events");
+    r(this, "renderService");
+    r(this, "tags");
+    r(this, "counterElement");
+    this.container = e, this.config = t, this.events = o, this.renderService = i, this.tags = [];
   }
-  /**
-   * MODIFIÉ : Vérifie si l'item existe déjà avant de l'ajouter
-   */
-  /**
-     * Ajoute un item ou met en surbrillance s'il existe déjà
-     */
   add(e) {
-    const t = this.tags.findIndex((r) => {
-      const l = JSON.stringify(r.getItem().value), o = JSON.stringify(e.value);
-      return l === o;
+    const t = this.tags.findIndex((n) => {
+      const s = JSON.stringify(n.getItem().value), a = JSON.stringify(e.value);
+      return s === a;
     });
     if (t !== -1)
       return console.warn("Item already selected:", e), this.highlightTag(t), !1;
-    const s = this.renderService.renderTag(e), n = new O(e, s, this.events);
-    return this.tags.push(n), this.render(), !0;
+    const o = this.renderService.renderTag(e), i = new _(e, o, this.events);
+    return this.tags.push(i), this.render(), !0;
   }
-  /**
-   * NOUVEAU : Met en surbrillance un tag existant
-   */
+  hasItem(e) {
+    return this.tags.some((t) => {
+      const o = JSON.stringify(t.getItem().value), i = JSON.stringify(e.value);
+      return o === i;
+    });
+  }
   highlightTag(e) {
     const t = this.tags[e];
     if (!t) return;
-    const s = t.getElement();
-    s.classList.add("comboselect-tag-highlight"), setTimeout(() => {
-      s.classList.remove("comboselect-tag-highlight");
+    const o = t.getElement();
+    o.classList.add("comboselect-tag-highlight"), setTimeout(() => {
+      o.classList.remove("comboselect-tag-highlight");
     }, 600);
-  }
-  /**
-   * NOUVEAU : Vérifie si un item existe déjà dans la liste
-   */
-  exists(e) {
-    return this.tags.some((t) => {
-      const s = JSON.stringify(t.getItem().value), n = JSON.stringify(e.value);
-      return s === n;
-    });
-  }
-  /**
-   * NOUVEAU : Méthode publique pour vérifier l'existence
-   */
-  hasItem(e) {
-    return this.exists(e);
   }
   remove(e) {
     const t = this.tags.findIndex(
-      (s) => JSON.stringify(s.getItem().value) === JSON.stringify(e.value)
+      (o) => JSON.stringify(o.getItem().value) === JSON.stringify(e.value)
     );
     t !== -1 && (this.tags[t]?.destroy(), this.tags.splice(t, 1), this.render());
   }
@@ -535,11 +832,11 @@ class A {
     c.removeAllChildren(this.container);
     const e = this.config.get("incrementValueSize");
     if (e && this.tags.length > e) {
-      this.tags.slice(0, e).forEach((n) => {
-        this.container.appendChild(n.getElement());
+      this.tags.slice(0, e).forEach((i) => {
+        this.container.appendChild(i.getElement());
       });
-      const s = this.tags.length - e;
-      this.renderCounter(s);
+      const o = this.tags.length - e;
+      this.renderCounter(o);
     } else
       this.tags.forEach((t) => {
         this.container.appendChild(t.getElement());
@@ -556,30 +853,41 @@ class A {
     this.tags.forEach((e) => e.destroy()), this.tags = [], c.removeAllChildren(this.container);
   }
 }
-class D {
+class M {
   constructor(e, t = {}) {
-    i(this, "originalInput");
-    i(this, "config");
-    i(this, "events");
-    i(this, "container");
-    i(this, "controlElement");
-    i(this, "tagsContainer");
-    i(this, "hiddenInput");
+    r(this, "originalInput");
+    r(this, "config");
+    r(this, "events");
+    r(this, "container");
+    r(this, "controlElement");
+    r(this, "tagsContainer");
+    r(this, "hiddenInput");
+    r(this, "rootElement");
+    r(this, "clickHandler");
+    // ← AJOUT
     // Services
-    i(this, "dataService");
-    i(this, "searchService");
-    i(this, "renderService");
+    r(this, "dataService");
+    r(this, "searchService");
+    r(this, "renderService");
     // Components
-    i(this, "input");
-    i(this, "dropdown");
-    i(this, "tagList");
+    r(this, "input");
+    r(this, "dropdown");
+    r(this, "tagList");
     // State
-    i(this, "isDisabled");
-    i(this, "isLoading");
-    const s = document.querySelector(e);
-    if (!s || !(s instanceof HTMLInputElement))
-      throw new Error(`Element "${e}" not found or is not an input element`);
-    this.originalInput = s, this.config = new g(t), this.events = new S(), this.isDisabled = !1, this.isLoading = !1, this.dataService = new E(this.config), this.searchService = new y(this.config), this.renderService = new C(this.config), this.container = this.createContainer(), this.controlElement = this.createControl(), this.tagsContainer = this.createTagsContainer(), this.hiddenInput = this.createHiddenInput(), this.input = new L(this.config, this.events), this.dropdown = new x(this.config, this.events, this.renderService), this.tagList = new A(this.tagsContainer, this.config, this.events, this.renderService), this.assemble(), this.attachEvents(), this.loadCustomCSS(), this.originalInput.style.display = "none";
+    r(this, "isDisabled");
+    let o;
+    if (typeof e == "string") {
+      const n = document.querySelector(e);
+      if (!n || !(n instanceof HTMLInputElement))
+        throw new Error(`Element "${e}" not found or is not an input element`);
+      o = n;
+    } else if (e instanceof HTMLInputElement)
+      o = e;
+    else
+      throw new Error("Selector must be a string or an HTMLInputElement");
+    this.originalInput = o, this.rootElement = o.getRootNode(), this.config = new f(t), this.events = new I(), this.isDisabled = !1;
+    const i = this.config.getAll();
+    this.dataService = new O(i), this.searchService = new T(i, this.dataService), this.renderService = new L(this.config), this.container = this.createContainer(), this.controlElement = this.createControl(), this.tagsContainer = this.createTagsContainer(), this.hiddenInput = this.createHiddenInput(), this.input = new D(this.config, this.events), this.dropdown = new N(this.events, this.renderService), this.tagList = new H(this.tagsContainer, this.config, this.events, this.renderService), this.assemble(), this.attachEvents(), this.setupSearchCallbacks(), this.loadCustomCSS(), this.originalInput.style.display = "none";
   }
   createContainer() {
     return c.createElement("div", "comboselect-wrapper");
@@ -602,21 +910,30 @@ class D {
   assemble() {
     this.originalInput.parentNode?.insertBefore(this.container, this.originalInput.nextSibling), this.controlElement.appendChild(this.tagsContainer), this.controlElement.appendChild(this.input.getElement()), this.container.appendChild(this.controlElement), this.container.appendChild(this.dropdown.getElement()), this.container.appendChild(this.hiddenInput);
   }
+  setupSearchCallbacks() {
+    this.searchService.setOnResults((e) => {
+      const t = this.tagList.getItems(), o = new Set(t.map((n) => JSON.stringify(n.value))), i = e.map((n) => ({
+        ...n,
+        disabled: o.has(JSON.stringify(n.value))
+      }));
+      this.dropdown.render(i);
+    }), this.searchService.setOnError((e) => {
+      console.error("Search error:", e), this.dropdown.render([]);
+    }), this.searchService.setOnSearchStart(() => {
+      this.dropdown.renderLoading();
+    });
+  }
   attachEvents() {
     this.events.on("search", async (e) => {
-      await this.handleSearch(e);
-      const t = this.config.get("onSearch");
-      t && await t(e);
+      this.searchService.search(e);
     }), this.events.on("select", async (e) => {
       await this.handleSelect(e);
-      const t = this.config.get("onSelect");
-      t && await t(e);
     }), this.events.on("remove", async (e) => {
       this.tagList.remove(e), this.updateHiddenInput(), this.input.focus();
       const t = this.config.get("onRemove");
       t && await t(e);
-      const s = this.config.get("onChange");
-      s && await s(this.getValue());
+      const o = this.config.get("onChange");
+      o && await o(this.getValue());
     }), this.events.on("open", async () => {
       this.input.setAriaExpanded(!0);
       const e = this.config.get("onOpen");
@@ -625,28 +942,21 @@ class D {
       this.dropdown.close(), this.input.setAriaExpanded(!1);
       const e = this.config.get("onClose");
       e && await e();
-    }), document.addEventListener("click", (e) => {
-      c.isDescendant(this.container, e.target) || this.dropdown.close();
+    }), this.clickHandler = (e) => {
+      const t = e, o = t.composedPath ? t.composedPath() : [];
+      let i = !1;
+      for (const n of o)
+        if (n === this.container) {
+          i = !0;
+          break;
+        }
+      !i && t.target && (i = this.container.contains(t.target)), !i && this.dropdown.isDropdownOpen() && this.dropdown.close();
+    }, document.addEventListener("click", this.clickHandler, !0), this.input.getElement().addEventListener("blur", () => {
+      setTimeout(() => {
+        const e = document.activeElement, t = this.rootElement instanceof ShadowRoot ? this.rootElement.activeElement : null;
+        !(this.container.contains(e) || t && this.container.contains(t)) && this.dropdown.isDropdownOpen() && this.dropdown.close();
+      }, 200);
     });
-  }
-  async handleSearch(e) {
-    if (!this.isLoading)
-      try {
-        this.isLoading = !0, this.dropdown.renderLoading();
-        const t = await this.dataService.fetch(e), s = this.searchService.parseResults(t), n = this.searchService.filterSelected(
-          s,
-          this.tagList.getItems()
-        );
-        this.dropdown.render(n);
-        const r = this.config.get("onLoad");
-        r && await r(t);
-      } catch (t) {
-        console.error("❌ Error during search:", t), this.dropdown.render([]);
-        const s = this.config.get("onError");
-        s && t instanceof Error && await s(t);
-      } finally {
-        this.isLoading = !1;
-      }
   }
   async handleSelect(e) {
     if (this.config.get("multiple") || this.tagList.clear(), !this.tagList.canAddMore()) {
@@ -659,21 +969,21 @@ class D {
     }
     if (this.tagList.add(e)) {
       this.updateHiddenInput(), this.config.get("clearOnSelect") && this.input.clear(), this.config.get("closeOnSelect") && this.dropdown.close(), this.input.focus();
-      const n = this.config.get("onChange");
-      n && await n(this.getValue());
-      const r = this.config.get("onSelect");
-      r && await r(e);
+      const i = this.config.get("onChange");
+      i && await i(this.getValue());
+      const n = this.config.get("onSelect");
+      n && await n(e);
     }
   }
   updateHiddenInput() {
-    const t = this.tagList.getItems().map((s) => s.value);
+    const t = this.tagList.getItems().map((o) => o.value);
     this.hiddenInput.value = JSON.stringify(t), this.originalInput.value = this.hiddenInput.value;
   }
   loadCustomCSS() {
     const e = this.config.get("cssUrl");
     if (e) {
       const t = document.createElement("link");
-      t.rel = "stylesheet", t.href = e, document.head.appendChild(t);
+      t.rel = "stylesheet", t.href = e, this.rootElement instanceof ShadowRoot ? this.rootElement.appendChild(t) : document.head.appendChild(t);
     }
   }
   // Public API
@@ -686,7 +996,7 @@ class D {
     }), this.updateHiddenInput();
   }
   clear() {
-    this.tagList.clear(), this.input.clear(), this.dropdown.close(), this.updateHiddenInput();
+    this.tagList.clear(), this.input.clear(), this.dropdown.close(), this.updateHiddenInput(), this.searchService.reset();
   }
   disable() {
     this.isDisabled = !0, this.input.disable(), this.controlElement.classList.add("disabled"), this.dropdown.close();
@@ -695,12 +1005,12 @@ class D {
     this.isDisabled = !1, this.input.enable(), this.controlElement.classList.remove("disabled");
   }
   destroy() {
-    this.dataService.abort(), this.events.clear(), this.input.destroy(), this.dropdown.destroy(), this.tagList.destroy(), this.container.remove(), this.originalInput.style.display = "";
+    this.clickHandler && document.removeEventListener("click", this.clickHandler, !0), this.searchService.abort(), this.events.clear(), this.input.destroy(), this.dropdown.destroy(), this.tagList.destroy(), this.container.remove(), this.originalInput.style.display = "";
   }
   open() {
     if (!this.isDisabled) {
       const e = this.input.getValue();
-      e && this.handleSearch(e);
+      e && this.searchService.searchImmediate(e);
     }
   }
   close() {
@@ -716,7 +1026,161 @@ class D {
     this.dataService.clearCache();
   }
 }
+const U = '@layer properties{@supports (((-webkit-hyphens:none)) and (not (margin-trim:inline))) or ((-moz-orient:inline) and (not (color:rgb(from red r g b)))){*,:before,:after,::backdrop{--tw-rotate-x:initial;--tw-rotate-y:initial;--tw-rotate-z:initial;--tw-skew-x:initial;--tw-skew-y:initial;--tw-border-style:solid;--tw-shadow:0 0 #0000;--tw-shadow-color:initial;--tw-shadow-alpha:100%;--tw-inset-shadow:0 0 #0000;--tw-inset-shadow-color:initial;--tw-inset-shadow-alpha:100%;--tw-ring-color:initial;--tw-ring-shadow:0 0 #0000;--tw-inset-ring-color:initial;--tw-inset-ring-shadow:0 0 #0000;--tw-ring-inset:initial;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-offset-shadow:0 0 #0000;--tw-outline-style:solid;--tw-blur:initial;--tw-brightness:initial;--tw-contrast:initial;--tw-grayscale:initial;--tw-hue-rotate:initial;--tw-invert:initial;--tw-opacity:initial;--tw-saturate:initial;--tw-sepia:initial;--tw-drop-shadow:initial;--tw-drop-shadow-color:initial;--tw-drop-shadow-alpha:100%;--tw-drop-shadow-size:initial;--tw-ease:initial;--tw-duration:initial;--tw-font-weight:initial}}}@layer theme{:root,:host{--font-sans:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";--font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--color-red-500:oklch(63.7% .237 25.331);--color-red-600:oklch(57.7% .245 27.325);--color-green-500:oklch(72.3% .219 149.579);--color-gray-50:oklch(98.5% .002 247.839);--color-gray-200:oklch(92.8% .006 264.531);--color-gray-700:oklch(37.3% .034 259.733);--color-white:#fff;--spacing:.25rem;--text-sm:.875rem;--text-sm--line-height:calc(1.25/.875);--font-weight-medium:500;--radius-md:.375rem;--radius-lg:.5rem;--ease-in-out:cubic-bezier(.4,0,.2,1);--animate-spin:spin 1s linear infinite;--default-transition-duration:.15s;--default-transition-timing-function:cubic-bezier(.4,0,.2,1);--default-font-family:var(--font-sans);--default-mono-font-family:var(--font-mono);--color-comboselect-primary:#3b82f6;--color-comboselect-border:#d1d5db;--color-comboselect-border-focus:#3b82f6;--color-comboselect-background:#fff;--color-comboselect-background-hover:#f3f4f6;--color-comboselect-text:#111827;--color-comboselect-text-secondary:#6b7280;--color-comboselect-tag:#eff6ff;--color-comboselect-tag-text:#1e40af;--color-comboselect-tag-hover:#dbeafe;--shadow-comboselect-dropdown:0 4px 6px -1px #0000001a,0 2px 4px -2px #0000001a;--shadow-comboselect-focus:0 0 0 3px #3b82f61a;--animate-comboselect-dropdown:comboselect-dropdown .15s ease-out;--animate-comboselect-tag:comboselect-tag .2s ease-out}}@layer base{*,:after,:before,::backdrop{box-sizing:border-box;border:0 solid;margin:0;padding:0}::file-selector-button{box-sizing:border-box;border:0 solid;margin:0;padding:0}html,:host{-webkit-text-size-adjust:100%;tab-size:4;line-height:1.5;font-family:var(--default-font-family,ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji");font-feature-settings:var(--default-font-feature-settings,normal);font-variation-settings:var(--default-font-variation-settings,normal);-webkit-tap-highlight-color:transparent}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;-webkit-text-decoration:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,samp,pre{font-family:var(--default-mono-font-family,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace);font-feature-settings:var(--default-mono-font-feature-settings,normal);font-variation-settings:var(--default-mono-font-variation-settings,normal);font-size:1em}small{font-size:80%}sub,sup{vertical-align:baseline;font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}:-moz-focusring{outline:auto}progress{vertical-align:baseline}summary{display:list-item}ol,ul,menu{list-style:none}img,svg,video,canvas,audio,iframe,embed,object{vertical-align:middle;display:block}img,video{max-width:100%;height:auto}button,input,select,optgroup,textarea{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}::file-selector-button{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}:where(select:is([multiple],[size])) optgroup{font-weight:bolder}:where(select:is([multiple],[size])) optgroup option{padding-inline-start:20px}::file-selector-button{margin-inline-end:4px}::placeholder{opacity:1}@supports (not ((-webkit-appearance:-apple-pay-button))) or (contain-intrinsic-size:1px){::placeholder{color:currentColor}@supports (color:color-mix(in lab,red,red)){::placeholder{color:color-mix(in oklab,currentcolor 50%,transparent)}}}textarea{resize:vertical}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-date-and-time-value{min-height:1lh;text-align:inherit}::-webkit-datetime-edit{display:inline-flex}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-datetime-edit{padding-block:0}::-webkit-datetime-edit-year-field{padding-block:0}::-webkit-datetime-edit-month-field{padding-block:0}::-webkit-datetime-edit-day-field{padding-block:0}::-webkit-datetime-edit-hour-field{padding-block:0}::-webkit-datetime-edit-minute-field{padding-block:0}::-webkit-datetime-edit-second-field{padding-block:0}::-webkit-datetime-edit-millisecond-field{padding-block:0}::-webkit-datetime-edit-meridiem-field{padding-block:0}::-webkit-calendar-picker-indicator{line-height:1}:-moz-ui-invalid{box-shadow:none}button,input:where([type=button],[type=reset],[type=submit]){appearance:button}::file-selector-button{appearance:button}::-webkit-inner-spin-button{height:auto}::-webkit-outer-spin-button{height:auto}[hidden]:where(:not([hidden=until-found])){display:none!important}}@layer components;@layer utilities{.static{position:static}.container{width:100%}@media(min-width:40rem){.container{max-width:40rem}}@media(min-width:48rem){.container{max-width:48rem}}@media(min-width:64rem){.container{max-width:64rem}}@media(min-width:80rem){.container{max-width:80rem}}@media(min-width:96rem){.container{max-width:96rem}}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.table{display:table}.transform{transform:var(--tw-rotate-x,)var(--tw-rotate-y,)var(--tw-rotate-z,)var(--tw-skew-x,)var(--tw-skew-y,)}.flex-wrap{flex-wrap:wrap}.border{border-style:var(--tw-border-style);border-width:1px}.shadow{--tw-shadow:0 1px 3px 0 var(--tw-shadow-color,#0000001a),0 1px 2px -1px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.outline{outline-style:var(--tw-outline-style);outline-width:1px}.blur{--tw-blur:blur(8px);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.transition{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to,opacity,box-shadow,transform,translate,scale,rotate,filter,-webkit-backdrop-filter,backdrop-filter,display,content-visibility,overlay,pointer-events;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.ease-in-out{--tw-ease:var(--ease-in-out);transition-timing-function:var(--ease-in-out)}}@keyframes comboselect-dropdown{0%{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}@keyframes comboselect-tag{0%{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}.comboselect-wrapper{width:100%;position:relative}.comboselect-control{min-height:calc(var(--spacing)*10);cursor:text;align-items:center;gap:calc(var(--spacing)*1);border-radius:var(--radius-lg);border-style:var(--tw-border-style);border-width:1px;border-color:var(--color-comboselect-border);background-color:var(--color-comboselect-background);padding-inline:calc(var(--spacing)*3);padding-block:calc(var(--spacing)*2);transition-property:all;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration));--tw-duration:.2s;flex-wrap:wrap;transition-duration:.2s;display:flex;position:relative}.comboselect-control:focus-within{border-color:var(--color-comboselect-border-focus);--tw-shadow:var(--shadow-comboselect-focus);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow);--tw-outline-style:none;outline-style:none}.comboselect-control.disabled{cursor:not-allowed;background-color:var(--color-gray-50);opacity:.6}.comboselect-tags{align-items:center;gap:calc(var(--spacing)*1);flex-wrap:wrap;flex:1;display:flex}.comboselect-tag{animation:var(--animate-comboselect-tag);align-items:center;gap:calc(var(--spacing)*1.5);border-radius:var(--radius-md);background-color:var(--color-comboselect-tag);padding-inline:calc(var(--spacing)*2);padding-block:calc(var(--spacing)*1);font-size:var(--text-sm);line-height:var(--tw-leading,var(--text-sm--line-height));--tw-font-weight:var(--font-weight-medium);font-weight:var(--font-weight-medium);color:var(--color-comboselect-tag-text);transition-property:all;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration));--tw-duration:.2s;transition-duration:.2s;display:inline-flex}.comboselect-tag:hover{background-color:var(--color-comboselect-tag-hover)}.comboselect-tag-remove{height:calc(var(--spacing)*4);width:calc(var(--spacing)*4);cursor:pointer;color:var(--color-comboselect-tag-text);transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration));border-radius:.25rem;justify-content:center;align-items:center;display:inline-flex}@media(hover:hover){.comboselect-tag-remove:hover{color:var(--color-red-600)}}.comboselect-tag-counter{border-radius:var(--radius-md);background-color:var(--color-gray-200);padding-inline:calc(var(--spacing)*2);padding-block:calc(var(--spacing)*1);font-size:var(--text-sm);line-height:var(--tw-leading,var(--text-sm--line-height));--tw-font-weight:var(--font-weight-medium);font-weight:var(--font-weight-medium);color:var(--color-gray-700);justify-content:center;align-items:center;display:inline-flex}.comboselect-input{border-style:var(--tw-border-style);min-width:120px;color:var(--color-comboselect-text);--tw-outline-style:none;background-color:#0000;border-width:0;outline-style:none;flex:1}.comboselect-input::placeholder{color:var(--color-comboselect-text-secondary)}.comboselect-input:disabled{cursor:not-allowed}.comboselect-dropdown{right:calc(var(--spacing)*0);left:calc(var(--spacing)*0);z-index:50;margin-top:calc(var(--spacing)*1);max-height:calc(var(--spacing)*60);animation:var(--animate-comboselect-dropdown);border-radius:var(--radius-lg);border-style:var(--tw-border-style);border-width:1px;border-color:var(--color-comboselect-border);background-color:var(--color-comboselect-background);--tw-shadow:var(--shadow-comboselect-dropdown);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow);position:absolute;overflow:auto}.comboselect-dropdown.hidden{display:none}.comboselect-option{cursor:pointer;padding-inline:calc(var(--spacing)*3);padding-block:calc(var(--spacing)*2);color:var(--color-comboselect-text);transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration));--tw-duration:.15s;transition-duration:.15s}.comboselect-option:hover{background-color:var(--color-comboselect-background-hover)}.comboselect-option.selected{background-color:var(--color-comboselect-primary);color:var(--color-white)}.comboselect-option.focused{background-color:var(--color-comboselect-background-hover)}.comboselect-option.disabled{cursor:not-allowed;opacity:.5}.comboselect-no-results{padding-inline:calc(var(--spacing)*3);padding-block:calc(var(--spacing)*2);text-align:center;color:var(--color-comboselect-text-secondary);font-style:italic}.comboselect-loading{justify-content:center;align-items:center;gap:calc(var(--spacing)*2);padding-inline:calc(var(--spacing)*3);padding-block:calc(var(--spacing)*2);text-align:center;color:var(--color-comboselect-text-secondary);display:flex}.comboselect-loading-spinner{height:calc(var(--spacing)*4);width:calc(var(--spacing)*4);animation:var(--animate-spin);border-style:var(--tw-border-style);border-width:2px;border-color:var(--color-comboselect-primary);border-top-color:#0000;border-radius:3.40282e38px;display:inline-block}.comboselect-wrapper.error .comboselect-control{border-color:var(--color-red-500)}.comboselect-wrapper.error .comboselect-control:focus-within{border-color:var(--color-red-500);--tw-shadow:0 0 0 3px var(--tw-shadow-color,#ef44441a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.comboselect-wrapper.success .comboselect-control{border-color:var(--color-green-500)}.comboselect-wrapper.success .comboselect-control:focus-within{border-color:var(--color-green-500);--tw-shadow:0 0 0 3px var(--tw-shadow-color,#22c55e1a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}@keyframes tag-highlight{0%,to{background-color:var(--color-comboselect-tag);transform:scale(1)}25%{background-color:#fef3c7;transform:scale(1.1)}50%{background-color:#fde68a;transform:scale(1.05)}75%{background-color:#fef3c7;transform:scale(1.1)}}.comboselect-tag-highlight{animation:.6s ease-in-out tag-highlight}@property --tw-rotate-x{syntax:"*";inherits:false}@property --tw-rotate-y{syntax:"*";inherits:false}@property --tw-rotate-z{syntax:"*";inherits:false}@property --tw-skew-x{syntax:"*";inherits:false}@property --tw-skew-y{syntax:"*";inherits:false}@property --tw-border-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-shadow-color{syntax:"*";inherits:false}@property --tw-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-inset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-shadow-color{syntax:"*";inherits:false}@property --tw-inset-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-ring-color{syntax:"*";inherits:false}@property --tw-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-ring-color{syntax:"*";inherits:false}@property --tw-inset-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-ring-inset{syntax:"*";inherits:false}@property --tw-ring-offset-width{syntax:"<length>";inherits:false;initial-value:0}@property --tw-ring-offset-color{syntax:"*";inherits:false;initial-value:#fff}@property --tw-ring-offset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-outline-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-blur{syntax:"*";inherits:false}@property --tw-brightness{syntax:"*";inherits:false}@property --tw-contrast{syntax:"*";inherits:false}@property --tw-grayscale{syntax:"*";inherits:false}@property --tw-hue-rotate{syntax:"*";inherits:false}@property --tw-invert{syntax:"*";inherits:false}@property --tw-opacity{syntax:"*";inherits:false}@property --tw-saturate{syntax:"*";inherits:false}@property --tw-sepia{syntax:"*";inherits:false}@property --tw-drop-shadow{syntax:"*";inherits:false}@property --tw-drop-shadow-color{syntax:"*";inherits:false}@property --tw-drop-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-drop-shadow-size{syntax:"*";inherits:false}@property --tw-ease{syntax:"*";inherits:false}@property --tw-duration{syntax:"*";inherits:false}@property --tw-font-weight{syntax:"*";inherits:false}@keyframes spin{to{transform:rotate(360deg)}}';
+class P extends HTMLElement {
+  constructor() {
+    super();
+    r(this, "comboSelect");
+    r(this, "inputElement");
+    r(this, "_dataSource");
+    this.attachShadow({ mode: "open" });
+  }
+  static get observedAttributes() {
+    return [
+      "placeholder",
+      "multiple",
+      "max-items",
+      "min-chars",
+      "debounce-delay",
+      "label-suggestion",
+      "value-suggestion",
+      "increment-value-size",
+      "disabled",
+      "autocomplete-url",
+      "results-key",
+      "close-on-select"
+    ];
+  }
+  connectedCallback() {
+    this.render(), this.initComboSelect();
+  }
+  disconnectedCallback() {
+    this.comboSelect?.destroy();
+  }
+  attributeChangedCallback(t, o, i) {
+    o !== i && this.comboSelect && this.updateConfig();
+  }
+  render() {
+    if (!this.shadowRoot) return;
+    const t = document.createElement("style");
+    t.textContent = U, this.inputElement = document.createElement("input"), this.inputElement.type = "text", this.inputElement.className = "comboselect-internal-input", this.inputElement.id = "combo-input", this.shadowRoot.appendChild(t), this.shadowRoot.appendChild(this.inputElement);
+  }
+  initComboSelect() {
+    if (!this.inputElement || !this.shadowRoot) return;
+    const t = this.buildConfig(), o = this.shadowRoot.querySelector("#combo-input");
+    o && (this.comboSelect = new M(o, t), console.log("✅ ComboSelect initialized with config:", t));
+  }
+  buildConfig() {
+    const t = {
+      placeholder: this.getAttribute("placeholder") || "Sélectionner...",
+      multiple: this.hasAttribute("multiple"),
+      labelSuggestion: this.getAttribute("label-suggestion") || "label",
+      valueSuggestion: this.getAttribute("value-suggestion") || null
+    }, o = this.getAttribute("max-items");
+    o && (t.maxItems = parseInt(o, 10));
+    const i = this.getAttribute("min-chars");
+    i && (t.minChars = parseInt(i, 10));
+    const n = this.getAttribute("debounce-delay");
+    n && (t.debounceDelay = parseInt(n, 10));
+    const s = this.getAttribute("increment-value-size");
+    s && (t.incrementValueSize = parseInt(s, 10)), this._dataSource && (t.dataSource = this._dataSource, console.log("📦 DataSource set:", this._dataSource));
+    const a = this.getAttribute("autocomplete-url");
+    a && (t.autocompleteUrl = a, console.log("🌐 Autocomplete URL:", a));
+    const h = this.getAttribute("results-key");
+    h && (t.resultsKey = h);
+    const m = this.getAttribute("close-on-select");
+    return m !== null && (t.closeOnSelect = m === "true"), t.onSelect = (d) => {
+      this.dispatchEvent(new CustomEvent("comboselect-select", {
+        detail: d,
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t.onChange = (d) => {
+      this.dispatchEvent(new CustomEvent("comboselect-change", {
+        detail: d,
+        bubbles: !0,
+        composed: !0
+      })), this.dispatchEvent(new CustomEvent("change", {
+        detail: d,
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t.onRemove = (d) => {
+      this.dispatchEvent(new CustomEvent("comboselect-remove", {
+        detail: d,
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t.onOpen = () => {
+      this.dispatchEvent(new CustomEvent("comboselect-open", {
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t.onClose = () => {
+      this.dispatchEvent(new CustomEvent("comboselect-close", {
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t.onSearch = (d) => {
+      this.dispatchEvent(new CustomEvent("comboselect-search", {
+        detail: { query: d },
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t.onLoad = (d) => {
+      this.dispatchEvent(new CustomEvent("comboselect-load", {
+        detail: d,
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t.onError = (d) => {
+      console.error("❌ ComboSelect error:", d), this.dispatchEvent(new CustomEvent("comboselect-error", {
+        detail: d,
+        bubbles: !0,
+        composed: !0
+      }));
+    }, t;
+  }
+  updateConfig() {
+    this.comboSelect && (this.comboSelect.destroy(), this.initComboSelect());
+  }
+  // API publique
+  get dataSource() {
+    return this._dataSource;
+  }
+  set dataSource(t) {
+    console.log("🔧 Setting dataSource:", t), this._dataSource = t, this.comboSelect && (console.log("♻️ Recreating ComboSelect with new dataSource"), this.updateConfig());
+  }
+  getValue() {
+    return this.comboSelect?.getValue() || [];
+  }
+  setValue(t) {
+    this.comboSelect?.setValue(t);
+  }
+  clear() {
+    this.comboSelect?.clear();
+  }
+  open() {
+    this.comboSelect?.open();
+  }
+  close() {
+    this.comboSelect?.close();
+  }
+  get disabled() {
+    return this.hasAttribute("disabled");
+  }
+  set disabled(t) {
+    t ? (this.setAttribute("disabled", ""), this.comboSelect?.disable()) : (this.removeAttribute("disabled"), this.comboSelect?.enable());
+  }
+}
+customElements.get("combo-select") || customElements.define("combo-select", P);
 export {
-  D as ComboSelect
+  j as ARIA_ATTRIBUTES,
+  V as CSS_CLASSES,
+  M as ComboSelect,
+  P as ComboSelectElement,
+  p as DEFAULTS,
+  B as EVENTS,
+  G as KEYBOARD_KEYS
 };
 //# sourceMappingURL=comboselect.js.map

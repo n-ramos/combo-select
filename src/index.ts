@@ -10,4 +10,25 @@ export type {
   SelectedItem,
   SuggestionItem,
   ComboSelectEvent,
+  ComboSelectAPI,
+  TypedComboSelectConfig,
+  StrictAutocompleteConfig,
+  StrictLocalDataConfig,
 } from './types';
+
+// Export des constantes
+export {
+  DEFAULTS,
+  CSS_CLASSES,
+  EVENTS,
+  KEYBOARD_KEYS,
+  ARIA_ATTRIBUTES,
+} from './core/constants';
+
+// 🆕 Export du Web Component
+export {
+  ComboSelectElement,
+
+} from './web-component/ComboSelectElement';
+
+

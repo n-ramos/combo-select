@@ -1,20 +1,21 @@
 import type { SuggestionItem } from '../types/index';
-import { Config } from '@core/Config';
+
 import { EventEmitter } from '@core/EventEmitter';
 import { RenderService } from '@services/RenderService';
 import { DOMHelpers } from '@utils/DOMHelpers';
 
 export class Dropdown {
   private element: HTMLElement;
-  // Suppression de la ligne inutilisée 'config'
   private events: EventEmitter;
   private renderService: RenderService;
   private suggestions: SuggestionItem[];
   private focusedIndex: number;
   private isOpen: boolean;
 
-  constructor(_config: Config, events: EventEmitter, renderService: RenderService) {
-    // On n'a pas besoin de stocker config car on ne l'utilise pas dans cette classe
+  constructor(
+    events: EventEmitter, 
+    renderService: RenderService
+  ) {
     this.events = events;
     this.renderService = renderService;
     this.suggestions = [];
@@ -56,23 +57,17 @@ export class Dropdown {
   }
 
   render(suggestions: SuggestionItem[]): void {
-    console.log('🎨 Dropdown.render called with suggestions:', suggestions);
-    console.log('📊 Number of suggestions:', suggestions.length);
-    
     this.suggestions = suggestions;
     this.focusedIndex = -1;
     DOMHelpers.removeAllChildren(this.element);
 
     if (suggestions.length === 0) {
-      console.log('⚠️ No suggestions - showing "no results" message');
       this.element.innerHTML = this.renderService.renderNoResults();
       this.open();
       return;
     }
 
-    console.log('✅ Rendering', suggestions.length, 'suggestions');
     suggestions.forEach((suggestion, index) => {
-      console.log(`  → Creating option ${index}:`, suggestion);
       const option = this.createOption(suggestion, index);
       this.element.appendChild(option);
     });
@@ -100,7 +95,7 @@ export class Dropdown {
     }
 
     option.addEventListener('mousedown', (e) => {
-      e.preventDefault(); // Empêche la perte de focus de l'input
+      e.preventDefault();
       if (!suggestion.disabled) {
         this.selectOption(index);
       }
@@ -136,7 +131,6 @@ export class Dropdown {
       newIndex = this.focusedIndex > 0 ? this.focusedIndex - 1 : maxIndex;
     }
 
-    // Sauter les options désactivées
     while (this.suggestions[newIndex]?.disabled) {
       if (direction === 'down') {
         newIndex = newIndex < maxIndex ? newIndex + 1 : 0;
@@ -144,7 +138,6 @@ export class Dropdown {
         newIndex = newIndex > 0 ? newIndex - 1 : maxIndex;
       }
 
-      // Éviter une boucle infinie si toutes les options sont désactivées
       if (newIndex === this.focusedIndex) {
         return;
       }
@@ -154,7 +147,6 @@ export class Dropdown {
   }
 
   private focusOption(index: number): void {
-    // Retirer le focus de l'option précédente
     if (this.focusedIndex >= 0) {
       const prevOption = this.element.querySelector(`[data-index="${this.focusedIndex}"]`);
       prevOption?.classList.remove('focused');
@@ -162,7 +154,6 @@ export class Dropdown {
 
     this.focusedIndex = index;
 
-    // Ajouter le focus à la nouvelle option
     const option = this.element.querySelector(`[data-index="${index}"]`);
     if (option) {
       option.classList.add('focused');

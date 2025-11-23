@@ -1,0 +1,137 @@
+name: Release and Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Déclenché sur les tags comme v1.0.0, v1.2.3, etc.
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run type check
+        run: npm run type-check
+        
+      - name: Run linter
+        run: npm run lint
+        
+      - name: Run tests
+        run: npm run test:run
+        
+      - name: Build project
+        run: npm run build
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  publish-npm:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@n-ramos'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-github-release:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          
+      - name: Extract version from tag
+        id: extract_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.extract_version.outputs.VERSION }}
+          body: |
+            ## 🎉 ComboSelect v${{ steps.extract_version.outputs.VERSION }}
+            
+            ### 📦 Installation
+            npm install @n-ramos/comboselect@${{ steps.extract_version.outputs.VERSION }}
+            
+            ### 🚀 Usage
+            
+            **ES Module:**
+            import { ComboSelect } from '@n-ramos/comboselect';
+            import '@n-ramos/comboselect/style.css';
+            
+            const combo = new ComboSelect('#myInput', {
+              dataSource: [...],
+              multiple: true
+            });
+            
+            **Web Component:**
+            import '@n-ramos/comboselect/webcomponent';
+            
+            <combo-select id="mySelect" multiple max-items="5"></combo-select>
+            
+            ### 📝 Changelog
+            Voir les commits inclus dans cette release ci-dessous.
+            
+            ### 📚 Documentation
+            [https://github.com/n-ramos/comboselect#readme](https://github.com/n-ramos/comboselect#readme)
+          draft: false
+          prerelease: false
+          files: |
+            dist/comboselect.js
+            dist/comboselect.umd.js
+            dist/comboselect.umd.cjs
+            dist/webcomponent.js
+            dist/webcomponent.umd.js
+            dist/webcomponent.umd.cjs
+            dist/style.css
+            dist/index.d.ts
+            dist/webcomponent.d.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,4 @@
-import type { ComboSelectConfig, SelectedItem } from '../types/index';
+import type { ComboSelectConfig, SelectedItem, SuggestionItem } from '../types/index';
 import { Config } from './Config';
 import { EventEmitter } from './EventEmitter';
 import { DataService } from '@services/DataService';
@@ -11,66 +11,69 @@ import { DOMHelpers } from '@utils/DOMHelpers';
 
 export class ComboSelect {
   private originalInput: HTMLInputElement;
-  private config: Config;
+  public config: Config;
   private events: EventEmitter;
   private container: HTMLElement;
   private controlElement: HTMLElement;
   private tagsContainer: HTMLElement;
   private hiddenInput: HTMLInputElement;
+  private rootElement: Document | ShadowRoot;
+  private clickHandler?: (e: Event) => void; // ← AJOUT
   
   // Services
-  private dataService: DataService;
-  private searchService: SearchService;
+  private dataService: DataService<any>;
+  private searchService: SearchService<any>;
   private renderService: RenderService;
   
   // Components
   private input: Input;
   private dropdown: Dropdown;
-  private tagList: TagList;
+  public tagList: TagList;
   
   // State
   private isDisabled: boolean;
-  private isLoading: boolean;
 
-  constructor(selector: string, options: Partial<ComboSelectConfig> = {}) {
-    const element = document.querySelector(selector);
+  constructor(selector: string | HTMLInputElement, options: Partial<ComboSelectConfig> = {}) {
+    let element: HTMLInputElement;
     
-    if (!element || !(element instanceof HTMLInputElement)) {
-      throw new Error(`Element "${selector}" not found or is not an input element`);
+    if (typeof selector === 'string') {
+      const el = document.querySelector(selector);
+      if (!el || !(el instanceof HTMLInputElement)) {
+        throw new Error(`Element "${selector}" not found or is not an input element`);
+      }
+      element = el;
+    } else if (selector instanceof HTMLInputElement) {
+      element = selector;
+    } else {
+      throw new Error('Selector must be a string or an HTMLInputElement');
     }
 
     this.originalInput = element;
+    this.rootElement = element.getRootNode() as Document | ShadowRoot;
+    
     this.config = new Config(options);
     this.events = new EventEmitter();
     this.isDisabled = false;
-    this.isLoading = false;
 
-    // Initialiser les services
-    this.dataService = new DataService(this.config);
-    this.searchService = new SearchService(this.config);
+    const fullConfig = this.config.getAll();
+    this.dataService = new DataService<any>(fullConfig as any);
+    this.searchService = new SearchService<any>(fullConfig as any, this.dataService);
     this.renderService = new RenderService(this.config);
 
-    // Créer la structure DOM
     this.container = this.createContainer();
     this.controlElement = this.createControl();
     this.tagsContainer = this.createTagsContainer();
     this.hiddenInput = this.createHiddenInput();
 
-    // Initialiser les composants
     this.input = new Input(this.config, this.events);
-    this.dropdown = new Dropdown(this.config, this.events, this.renderService);
+    this.dropdown = new Dropdown(this.events, this.renderService);
     this.tagList = new TagList(this.tagsContainer, this.config, this.events, this.renderService);
 
-    // Assembler le DOM
     this.assemble();
-
-    // Attacher les événements
     this.attachEvents();
-
-    // Charger CSS personnalisé si fourni
+    this.setupSearchCallbacks();
     this.loadCustomCSS();
 
-    // Cacher l'input original
     this.originalInput.style.display = 'none';
   }
 
@@ -99,15 +102,13 @@ export class ComboSelect {
     const input = DOMHelpers.createElement('input', '', {
       type: 'hidden',
       name: this.originalInput.name || '',
-    });
+    }) as HTMLInputElement;
     return input;
   }
 
   private assemble(): void {
-    // Insérer le container après l'input original
     this.originalInput.parentNode?.insertBefore(this.container, this.originalInput.nextSibling);
 
-    // Assembler les éléments
     this.controlElement.appendChild(this.tagsContainer);
     this.controlElement.appendChild(this.input.getElement());
     
@@ -116,25 +117,40 @@ export class ComboSelect {
     this.container.appendChild(this.hiddenInput);
   }
 
+  private setupSearchCallbacks(): void {
+    this.searchService.setOnResults((suggestions: SuggestionItem<any>[]) => {
+      const selected = this.tagList.getItems();
+      const selectedValues = new Set(selected.map(item => JSON.stringify(item.value)));
+      
+      const filteredSuggestions = suggestions.map(suggestion => ({
+        ...suggestion,
+        disabled: selectedValues.has(JSON.stringify(suggestion.value))
+      }));
+
+      this.dropdown.render(filteredSuggestions);
+    });
+
+    this.searchService.setOnError((error: Error) => {
+      console.error('Search error:', error);
+      this.dropdown.render([]);
+    });
+
+    this.searchService.setOnSearchStart(() => {
+    
+      this.dropdown.renderLoading();
+    });
+
+  }
+
   private attachEvents(): void {
     // Événement de recherche
     this.events.on('search', async (query: string) => {
-      await this.handleSearch(query);
-      
-      const callback = this.config.get('onSearch');
-      if (callback) {
-        await callback(query);
-      }
+      this.searchService.search(query);
     });
 
     // Événement de sélection
     this.events.on('select', async (item: SelectedItem) => {
       await this.handleSelect(item);
-      
-      const callback = this.config.get('onSelect');
-      if (callback) {
-        await callback(item);
-      }
     });
 
     // Événement de suppression
@@ -174,56 +190,63 @@ export class ComboSelect {
       }
     });
 
-    // Fermer le dropdown au clic extérieur
-    document.addEventListener('click', (e) => {
-      if (!DOMHelpers.isDescendant(this.container, e.target as HTMLElement)) {
+    // ========================================
+    // FERMER AU CLIC EXTÉRIEUR - VERSION ROBUSTE
+    // ========================================
+    this.clickHandler = (e: Event) => {
+      const mouseEvent = e as MouseEvent;
+      
+      // Utiliser composedPath pour gérer le Shadow DOM
+      const path = mouseEvent.composedPath ? mouseEvent.composedPath() : [];
+      
+      // Vérifier si le clic est dans notre composant
+      let isInside = false;
+      
+      // Méthode 1: Vérifier dans le composedPath
+      for (const element of path) {
+        if (element === this.container) {
+          isInside = true;
+          break;
+        }
+      }
+      
+      // Méthode 2: Fallback avec contains (pour les navigateurs plus anciens)
+      if (!isInside && mouseEvent.target) {
+        isInside = this.container.contains(mouseEvent.target as Node);
+      }
+      
+      // Si le clic est en dehors ET que le dropdown est ouvert, le fermer
+      if (!isInside && this.dropdown.isDropdownOpen()) {
         this.dropdown.close();
       }
+    };
+
+    // Attacher au document en phase de capture pour intercepter tous les clics
+    // true = capture phase (important pour Shadow DOM)
+    document.addEventListener('click', this.clickHandler as EventListener, true);
+
+    // ========================================
+    // BONUS: Fermer au blur avec délai
+    // ========================================
+    this.input.getElement().addEventListener('blur', () => {
+      // Petit délai pour permettre aux clics sur les options de fonctionner
+      setTimeout(() => {
+        // Vérifier si le focus n'est pas dans le composant
+        const activeElement = document.activeElement;
+        const shadowActiveElement = this.rootElement instanceof ShadowRoot 
+          ? this.rootElement.activeElement 
+          : null;
+        
+        const hasFocus = this.container.contains(activeElement as Node) ||
+                        (shadowActiveElement && this.container.contains(shadowActiveElement as Node));
+        
+        if (!hasFocus && this.dropdown.isDropdownOpen()) {
+          this.dropdown.close();
+        }
+      }, 200);
     });
   }
 
-  private async handleSearch(query: string): Promise<void> {
-
-    
-    if (this.isLoading) {
-
-      return;
-    }
-
-    try {
-      this.isLoading = true;
-      this.dropdown.renderLoading();
-
-  
-      const data = await this.dataService.fetch(query);
-   
-
-      const suggestions = this.searchService.parseResults(data);
-    
-      const filteredSuggestions = this.searchService.filterSelected(
-        suggestions,
-        this.tagList.getItems()
-      );
-
-      this.dropdown.render(filteredSuggestions);
-
-      const onLoad = this.config.get('onLoad');
-      if (onLoad) {
-        await onLoad(data);
-      }
-    } catch (error) {
-      console.error('❌ Error during search:', error);
-      this.dropdown.render([]);
-      
-      const onError = this.config.get('onError');
-      if (onError && error instanceof Error) {
-        await onError(error);
-      }
-    } finally {
-      this.isLoading = false;
-
-    }
-  }
   private async handleSelect(item: SelectedItem): Promise<void> {
     const multiple = this.config.get('multiple');
 
@@ -231,20 +254,16 @@ export class ComboSelect {
       this.tagList.clear();
     }
 
-    // Vérifier si on peut ajouter plus d'items
     if (!this.tagList.canAddMore()) {
       console.warn('Maximum number of items reached');
       return;
     }
 
-    // MODIFIÉ : Vérifier si l'item existe déjà avant de l'ajouter
     if (this.tagList.hasItem(item)) {
       console.log('Item already selected, skipping:', item);
-      // On peut optionnellement afficher un feedback visuel ici
       return;
     }
 
-    // Ajouter l'item seulement s'il n'existe pas déjà
     const added = this.tagList.add(item);
     
     if (added) {
@@ -260,13 +279,11 @@ export class ComboSelect {
 
       this.input.focus();
 
-      // Appeler le callback onChange seulement si l'item a été ajouté
       const onChange = this.config.get('onChange');
       if (onChange) {
         await onChange(this.getValue());
       }
 
-      // Appeler onSelect également
       const onSelect = this.config.get('onSelect');
       if (onSelect) {
         await onSelect(item);
@@ -278,8 +295,6 @@ export class ComboSelect {
     const items = this.tagList.getItems();
     const values = items.map((item) => item.value);
     this.hiddenInput.value = JSON.stringify(values);
-    
-    // Mettre à jour aussi l'input original
     this.originalInput.value = this.hiddenInput.value;
   }
 
@@ -289,7 +304,12 @@ export class ComboSelect {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = cssUrl;
-      document.head.appendChild(link);
+      
+      if (this.rootElement instanceof ShadowRoot) {
+        this.rootElement.appendChild(link);
+      } else {
+        document.head.appendChild(link);
+      }
     }
   }
 
@@ -314,6 +334,7 @@ export class ComboSelect {
     this.input.clear();
     this.dropdown.close();
     this.updateHiddenInput();
+    this.searchService.reset();
   }
 
   public disable(): void {
@@ -330,7 +351,14 @@ export class ComboSelect {
   }
 
   public destroy(): void {
-    this.dataService.abort();
+    // ========================================
+    // IMPORTANT: Retirer le click handler
+    // ========================================
+    if (this.clickHandler) {
+      document.removeEventListener('click', this.clickHandler as EventListener, true);
+    }
+    
+    this.searchService.abort();
     this.events.clear();
     this.input.destroy();
     this.dropdown.destroy();
@@ -343,7 +371,7 @@ export class ComboSelect {
     if (!this.isDisabled) {
       const query = this.input.getValue();
       if (query) {
-        void this.handleSearch(query);
+        this.searchService.searchImmediate(query);
       }
     }
   }

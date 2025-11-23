@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComboSelect - UMD Test</title>
+    
+    <!-- Importer le CSS -->
+    <link rel="stylesheet" href="comboselect.css">
+    
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .demo {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            color: #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        .result {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 ComboSelect - UMD (Script classique)</h1>
+    <p>Utilisation sans ES modules, juste avec <code>&lt;script src=""&gt;</code></p>
+
+    <div class="demo">
+        <h2>Version Classique</h2>
+        
+        <div class="form-group">
+            <label>
+                Villes françaises
+                <span class="badge">Multiple</span>
+            </label>
+            <input type="text" id="cities" />
+        </div>
+
+        <div class="form-group">
+            <label>
+                Pays
+                <span class="badge">Single</span>
+            </label>
+            <input type="text" id="country" />
+        </div>
+
+        <button onclick="showValues()">Voir valeurs</button>
+        <button onclick="clearAll()">Vider</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="demo">
+        <h2>Web Component</h2>
+        
+        <div class="form-group">
+            <label>
+                Langages de programmation
+                <span class="badge">Multiple</span>
+            </label>
+            <combo-select 
+                id="languages"
+                placeholder="Sélectionner des langages..."
+                multiple
+                max-items="5"
+                increment-value-size="2"
+            ></combo-select>
+        </div>
+
+        <button onclick="showLanguages()">Voir langages</button>
+    </div>
+
+    <!-- 
+        IMPORTANT: Charger d'abord la version UMD principale
+        Cela rend ComboSelect disponible globalement
+    -->
+    <script src="comboselect.umd.js"></script>
+    
+
+    <!-- Votre code -->
+    <script>
+        console.log('ComboSelect disponible ?', typeof ComboSelect !== 'undefined');
+        
+        // Données de test
+        var cities = [
+            { id: 1, name: 'Paris', population: 2161000 },
+            { id: 2, name: 'Marseille', population: 869000 },
+            { id: 3, name: 'Lyon', population: 516000 },
+            { id: 4, name: 'Toulouse', population: 471000 },
+            { id: 5, name: 'Nice', population: 341000 }
+        ];
+
+        var countries = [
+            { code: 'FR', name: 'France', flag: '🇫🇷' },
+            { code: 'GB', name: 'Royaume-Uni', flag: '🇬🇧' },
+            { code: 'DE', name: 'Allemagne', flag: '🇩🇪' },
+            { code: 'ES', name: 'Espagne', flag: '🇪🇸' }
+        ];
+
+        var languages = [
+            { id: 1, name: 'JavaScript' },
+            { id: 2, name: 'TypeScript' },
+            { id: 3, name: 'Python' },
+            { id: 4, name: 'PHP' },
+            { id: 5, name: 'Java' }
+        ];
+
+        // Initialiser ComboSelect (version classique)
+        var citiesCombo = new ComboSelect.ComboSelect('#cities', {
+            dataSource: cities,
+            labelSuggestion: 'name',
+            valueSuggestion: 'id',
+            multiple: true,
+            maxItems: 5,
+            incrementValueSize: 3,
+            placeholder: 'Tapez pour rechercher...'
+        });
+
+        var countryCombo = new ComboSelect.ComboSelect('#country', {
+            dataSource: countries,
+            labelSuggestion: 'name',
+            valueSuggestion: 'code',
+            placeholder: 'Sélectionner un pays...'
+        });
+
+        // Initialiser le Web Component
+        var languagesEl = document.getElementById('languages');
+        languagesEl.dataSource = languages;
+        languagesEl.setAttribute('label-suggestion', 'name');
+        languagesEl.setAttribute('value-suggestion', 'id');
+
+        // Fonctions
+        function showValues() {
+            var result = {
+                cities: citiesCombo.getValue(),
+                country: countryCombo.getValue()
+            };
+            
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+        }
+
+        function clearAll() {
+            citiesCombo.clear();
+            countryCombo.clear();
+            document.getElementById('result').style.display = 'none';
+        }
+
+        function showLanguages() {
+            var values = languagesEl.getValue();
+            alert('Langages sélectionnés: ' + JSON.stringify(values, null, 2));
+        }
+
+        console.log('✅ ComboSelect initialisé !');
+    </script>
+</body>
+</html>

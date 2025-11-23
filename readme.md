@@ -1,5 +1,8 @@
-Voici le fichier DOCUMENTATION.en.md complet :
-markdown# ComboSelect Documentation
+# ComboSelect Documentation
+[![npm version](https://img.shields.io/npm/v/@n-ramos/comboselect.svg)](https://www.npmjs.com/package/@n-ramos/comboselect)
+[![npm downloads](https://img.shields.io/npm/dm/@n-ramos/comboselect.svg)](https://www.npmjs.com/package/@n-ramos/comboselect)
+[![CI](https://github.com/n-ramos/comboselect/actions/workflows/ci.yml/badge.svg)](https://github.com/n-ramos/comboselect/actions/workflows/ci.yml)
+[![License](https://img.shields.io/npm/l/@n-ramos/comboselect.svg)](https://github.com/n-ramos/comboselect/blob/main/LICENSE)
 
 **Version:** 1.0.0  
 **License:** MIT

@@ -1,92 +1,130 @@
-import { Config } from '@core/Config';
+/**
+ * Service de gestion des données
+ * Gère le chargement et la transformation des données depuis différentes sources
+ */
 
-export class DataService {
-  private config: Config;
-  private abortController?: AbortController;
-  private cache: Map<string, any[]>;
+import type { ComboSelectConfig } from '../types';
+import { DEFAULTS, DEFAULT_HTTP_HEADERS, ERROR_MESSAGES, TIMEOUTS } from '../core/constants';
 
-  constructor(config: Config) {
+/**
+ * Service pour gérer les sources de données
+ * @public
+ */
+export class DataService<T = any> {
+  private config: ComboSelectConfig<T>;
+  private cache: Map<string, T[]> = new Map();
+  private abortController: AbortController | null = null;
+
+  constructor(config: ComboSelectConfig<T>) {
     this.config = config;
-    this.cache = new Map();
   }
 
-  async fetch(query: string): Promise<any[]> {
-    // Si dataSource est défini, l'utiliser en priorité
-    const dataSource = this.config.get('dataSource');
-    if (dataSource) {
-      return this.fetchFromDataSource(query, dataSource);
+  /**
+   * Charger les données selon la configuration
+   * @param query - Requête de recherche (pour API)
+   * @returns Promesse avec les données
+   */
+  async loadData(query?: string): Promise<T[]> {
+    // Source locale
+    if (this.config.dataSource) {
+      return this.loadLocalData();
     }
 
-    // Sinon utiliser autocompleteUrl
-    const url = this.config.get('autocompleteUrl');
-    if (!url) {
+    // Source API
+    if (this.config.autocompleteUrl) {
+      return this.loadRemoteData(query || '');
+    }
+
+    throw new Error(ERROR_MESSAGES.NO_DATA_SOURCE);
+  }
+
+  /**
+   * Charger les données locales
+   * @private
+   */
+  private async loadLocalData(): Promise<T[]> {
+    const { dataSource } = this.config;
+
+    if (!dataSource) {
       return [];
     }
 
-    return this.fetchFromUrl(query, url);
-  }
-
-  private async fetchFromDataSource(
-    query: string,
-    dataSource: any[] | (() => any[] | Promise<any[]>)
-  ): Promise<any[]> {
-    let data: any[];
-
+    // Si c'est une fonction
     if (typeof dataSource === 'function') {
-      data = await dataSource();
-    } else {
-      data = dataSource;
+      const result = dataSource();
+      // Si la fonction retourne une promesse
+      if (result instanceof Promise) {
+        return await result;
+      }
+      return result;
     }
 
-    // Filtrer localement
-    const labelKey = this.config.get('labelSuggestion') || 'label';
-    const queryLower = query.toLowerCase();
-
-    return data.filter((item) => {
-      const label = this.getNestedValue(item, labelKey);
-      return String(label).toLowerCase().includes(queryLower);
-    });
+    // Si c'est un tableau
+    return dataSource;
   }
 
-  private async fetchFromUrl(query: string, url: string): Promise<any[]> {
+  /**
+   * Charger les données depuis une API
+   * @param query - Requête de recherche
+   * @private
+   */
+  private async loadRemoteData(query: string): Promise<T[]> {
+    const { autocompleteUrl, searchParam, httpMethod, httpHeaders } = this.config;
+
+    if (!autocompleteUrl) {
+      throw new Error(ERROR_MESSAGES.NO_DATA_SOURCE);
+    }
+
     // Vérifier le cache
-    const cacheKey = `${url}:${query}`;
+    const cacheKey = `${autocompleteUrl}:${query}`;
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
 
-    // Annuler la requête précédente
-    this.abortController?.abort();
+    // Annuler la requête précédente si elle existe
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+
     this.abortController = new AbortController();
 
-    const httpMethod = this.config.get('httpMethod') || 'GET';
-    const searchParam = this.config.get('searchParam') || 'q';
-    const headers = this.config.get('httpHeaders') || {};
-
     try {
-      let fetchUrl = url;
-      let options: RequestInit = {
-        method: httpMethod,
-        headers,
+      let url = autocompleteUrl;
+      let fetchOptions: RequestInit = {
         signal: this.abortController.signal,
+        headers: {
+          ...DEFAULT_HTTP_HEADERS,
+          ...httpHeaders,
+        },
       };
 
-      if (httpMethod === 'GET') {
+      const method = httpMethod || DEFAULTS.HTTP_METHOD;
+      const param = searchParam || DEFAULTS.SEARCH_PARAM;
+
+      if (method === 'GET') {
+        // Ajouter le paramètre de recherche à l'URL
         const separator = url.includes('?') ? '&' : '?';
-        fetchUrl = `${url}${separator}${searchParam}=${encodeURIComponent(query)}`;
+        url = `${url}${separator}${param}=${encodeURIComponent(query)}`;
+        fetchOptions.method = 'GET';
       } else {
-        options.body = JSON.stringify({ [searchParam]: query });
+        // POST - Envoyer dans le body
+        fetchOptions.method = 'POST';
+        fetchOptions.body = JSON.stringify({ [param]: query });
       }
 
-      const response = await fetch(fetchUrl, options);
+      // Timeout
+      const timeoutId = setTimeout(() => {
+        this.abortController?.abort();
+      }, TIMEOUTS.HTTP_TIMEOUT);
+
+      const response = await fetch(url, fetchOptions);
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`${ERROR_MESSAGES.FETCH_ERROR}: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      
-      // NOUVEAU : Extraire les résultats selon la configuration
       const results = this.extractResults(data);
 
       // Mettre en cache
@@ -94,76 +132,142 @@ export class DataService {
 
       return results;
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        return [];
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          // Requête annulée, ne pas logger
+          return [];
+        }
+        throw new Error(`${ERROR_MESSAGES.FETCH_ERROR}: ${error.message}`);
       }
-      console.error('Error fetching data:', error);
       throw error;
     }
   }
 
   /**
-   * NOUVEAU : Extrait les résultats d'une réponse API selon la configuration
+   * Extraire les résultats de la réponse API
+   * @param data - Données brutes de l'API
+   * @private
    */
-  private extractResults(data: any): any[] {
-    // Si une fonction de transformation personnalisée est définie
-    const transformResponse = this.config.get('transformResponse');
+  private extractResults(data: any): T[] {
+    const { resultsKey, transformResponse } = this.config;
+
+    // Si une fonction de transformation est fournie
     if (transformResponse) {
-      return transformResponse(data);
+      try {
+        return transformResponse(data);
+      } catch (error) {
+        throw new Error(ERROR_MESSAGES.PARSE_ERROR);
+      }
     }
 
-    // Si la réponse est déjà un tableau
+    // Si une clé de résultats est spécifiée
+    if (resultsKey) {
+      try {
+        // Support pour les clés imbriquées: "data.items" ou ["data", "items"]
+        const keys = Array.isArray(resultsKey) ? resultsKey : resultsKey.split('.');
+        let result = data;
+
+        for (const key of keys) {
+          if (result && typeof result === 'object' && key in result) {
+            result = result[key];
+          } else {
+            throw new Error(`Key "${key}" not found in response`);
+          }
+        }
+
+        if (Array.isArray(result)) {
+          return result as T[];
+        }
+
+        throw new Error('Results is not an array');
+      } catch (error) {
+        console.error('Error extracting results:', error);
+        throw new Error(ERROR_MESSAGES.PARSE_ERROR);
+      }
+    }
+
+    // Par défaut, retourner les données si c'est un tableau
     if (Array.isArray(data)) {
+      return data as T[];
+    }
+
+    throw new Error(ERROR_MESSAGES.PARSE_ERROR);
+  }
+
+  /**
+   * Filtrer les données localement
+   * @param data - Données à filtrer
+   * @param query - Requête de recherche
+   * @returns Données filtrées
+   */
+  filterData(data: T[], query: string): T[] {
+    if (!query || query.trim() === '') {
       return data;
     }
 
-    // Utiliser resultsKey pour extraire les données
-    const resultsKey = this.config.get('resultsKey');
-    
-    if (resultsKey) {
-      // Si c'est un tableau de clés (pour chemins imbriqués)
-      if (Array.isArray(resultsKey)) {
-        let results = data;
-        for (const key of resultsKey) {
-          results = results?.[key];
-          if (!results) break;
-        }
-        return Array.isArray(results) ? results : [];
-      }
-      
-      // Si c'est une seule clé (peut contenir des points pour chemins imbriqués)
-      const results = this.getNestedValue(data, resultsKey);
-      return Array.isArray(results) ? results : [];
-    }
+    const searchTerm = query.toLowerCase().trim();
+    const { labelSuggestion } = this.config;
+    const labelKey = (labelSuggestion as string) || DEFAULTS.LABEL_KEY;
 
-    // Essayer les clés communes par défaut
-    const commonKeys = ['results', 'items', 'data', 'list', 'records', 'rows'];
-    for (const key of commonKeys) {
-      if (data[key] && Array.isArray(data[key])) {
-        return data[key];
-      }
-    }
-
-    // Si aucune clé ne fonctionne et que c'est un objet avec une seule propriété tableau
-    const keys = Object.keys(data);
-    if (keys.length === 1 && Array.isArray(data[keys[0]!])) {
-      return data[keys[0]!];
-    }
-
-    // Dernier recours : retourner un tableau vide
-    console.warn('Could not extract results from API response. Consider using resultsKey or transformResponse config.', data);
-    return [];
+    return data.filter((item) => {
+      // Récupérer le label de l'item
+      const label = this.getItemLabel(item, labelKey);
+      return label.toLowerCase().includes(searchTerm);
+    });
   }
 
-  private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  /**
+   * Obtenir le label d'un item
+   * @param item - Item
+   * @param labelKey - Clé du label
+   * @private
+   */
+  private getItemLabel(item: T, labelKey: string): string {
+    if (typeof item === 'string') {
+      return item;
+    }
+
+    if (typeof item === 'object' && item !== null) {
+      const value = (item as any)[labelKey];
+      return value !== undefined && value !== null ? String(value) : '';
+    }
+
+    return String(item);
   }
 
+  /**
+   * Vider le cache
+   */
   clearCache(): void {
     this.cache.clear();
   }
 
+  /**
+   * Annuler les requêtes en cours
+   */
   abort(): void {
-    this.abortController?.abort();
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+  }
+
+  /**
+   * Obtenir la taille du cache
+   */
+  getCacheSize(): number {
+    return this.cache.size;
+  }
+
+  /**
+   * Supprimer une entrée du cache
+   * @param query - Requête à supprimer du cache
+   */
+  removeCacheEntry(query: string): void {
+    const { autocompleteUrl } = this.config;
+    if (autocompleteUrl) {
+      const cacheKey = `${autocompleteUrl}:${query}`;
+      this.cache.delete(cacheKey);
+    }
   }
 }

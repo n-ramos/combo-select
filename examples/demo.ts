@@ -75,9 +75,6 @@ const simpleSelect = new ComboSelect('#simple-select', {
   labelSuggestion: 'name',
   valueSuggestion: 'id',
   placeholder: 'Rechercher une ville...',
-  onSelect: (item) => {
-    console.log('Ville sélectionnée:', item);
-  },
 });
 
 (window as any).getSimpleValue = () => {
@@ -99,9 +96,6 @@ const multipleSelect = new ComboSelect('#multiple-select', {
   maxItems: 5,
   placeholder: 'Sélectionner des villes...',
   closeOnSelect: false,
-  onChange: (items) => {
-    console.log('Sélection changée:', items);
-  },
 });
 
 (window as any).getMultipleValue = () => {
@@ -238,6 +232,3 @@ const minCharsSelect = new ComboSelect('#minchars-select', {
   minChars: 3,
   placeholder: 'Tapez au moins 3 caractères...',
 });
-
-// Log des événements pour le debug
-console.log('ComboSelect démarré! Ouvrez la console pour voir les logs.');

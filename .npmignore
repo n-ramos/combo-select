@@ -1,0 +1,28 @@
+# Sources
+src/
+examples/
+.github/
+
+# Config files
+vite.config.ts
+tsconfig.json
+eslint.config.js
+.prettierrc
+.prettierignore
+
+# Tests
+**/*.test.ts
+**/*.spec.ts
+vitest.config.ts
+
+# Dev files
+.vscode/
+.idea/
+*.log
+.DS_Store
+node_modules/
+
+# Build artifacts that we don't want to publish
+*.tsbuildinfo
+
+# Keep only dist/ in the package

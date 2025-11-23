@@ -26,14 +26,7 @@ export class TagList {
     this.tags = [];
   }
 
-  /**
-   * MODIFIÉ : Vérifie si l'item existe déjà avant de l'ajouter
-   */
-/**
-   * Ajoute un item ou met en surbrillance s'il existe déjà
-   */
-add(item: SelectedItem): boolean {
-    // Vérifier si l'item existe déjà
+  add(item: SelectedItem): boolean {
     const existingTagIndex = this.tags.findIndex((tag) => {
       const existingValue = JSON.stringify(tag.getItem().value);
       const newValue = JSON.stringify(item.value);
@@ -42,7 +35,6 @@ add(item: SelectedItem): boolean {
 
     if (existingTagIndex !== -1) {
       console.warn('Item already selected:', item);
-      // Ajouter un effet visuel sur le tag existant
       this.highlightTag(existingTagIndex);
       return false;
     }
@@ -54,28 +46,7 @@ add(item: SelectedItem): boolean {
     return true;
   }
 
-  /**
-   * NOUVEAU : Met en surbrillance un tag existant
-   */
-  private highlightTag(index: number): void {
-    const tag = this.tags[index];
-    if (!tag) return;
-
-    const element = tag.getElement();
-    
-    // Ajouter une classe pour l'animation
-    element.classList.add('comboselect-tag-highlight');
-    
-    // Retirer la classe après l'animation
-    setTimeout(() => {
-      element.classList.remove('comboselect-tag-highlight');
-    }, 600);
-  }
-
-  /**
-   * NOUVEAU : Vérifie si un item existe déjà dans la liste
-   */
-  private exists(item: SelectedItem): boolean {
+  public hasItem(item: SelectedItem): boolean {
     return this.tags.some((tag) => {
       const existingValue = JSON.stringify(tag.getItem().value);
       const newValue = JSON.stringify(item.value);
@@ -83,11 +54,16 @@ add(item: SelectedItem): boolean {
     });
   }
 
-  /**
-   * NOUVEAU : Méthode publique pour vérifier l'existence
-   */
-  public hasItem(item: SelectedItem): boolean {
-    return this.exists(item);
+  private highlightTag(index: number): void {
+    const tag = this.tags[index];
+    if (!tag) return;
+
+    const element = tag.getElement();
+    element.classList.add('comboselect-tag-highlight');
+    
+    setTimeout(() => {
+      element.classList.remove('comboselect-tag-highlight');
+    }, 600);
   }
 
   remove(item: SelectedItem): void {
@@ -118,17 +94,14 @@ add(item: SelectedItem): boolean {
     const incrementSize = this.config.get('incrementValueSize');
 
     if (incrementSize && this.tags.length > incrementSize) {
-      // Afficher seulement les N premiers tags
       const visibleTags = this.tags.slice(0, incrementSize);
       visibleTags.forEach((tag) => {
         this.container.appendChild(tag.getElement());
       });
 
-      // Afficher le compteur
       const remainingCount = this.tags.length - incrementSize;
       this.renderCounter(remainingCount);
     } else {
-      // Afficher tous les tags
       this.tags.forEach((tag) => {
         this.container.appendChild(tag.getElement());
       });

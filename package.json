@@ -1,6 +1,6 @@
 {
-    "name": "comboselect",
-    "version": "0.1.0",
+    "name": "@n-ramos/comboselect",
+    "version": "v0.1.0",
     "description": "A modern, flexible select/autocomplete component with tags support",
     "type": "module",
     "main": "./dist/comboselect.umd.cjs",
@@ -8,33 +8,54 @@
     "types": "./dist/index.d.ts",
     "exports": {
       ".": {
+        "types": "./dist/index.d.ts",
         "import": "./dist/comboselect.js",
         "require": "./dist/comboselect.umd.cjs",
-        "types": "./dist/index.d.ts"
+        "default": "./dist/comboselect.js"
       },
-      "./style.css": "./dist/style.css"
+      "./webcomponent": {
+        "types": "./dist/webcomponent.d.ts",
+        "import": "./dist/webcomponent.js",
+        "require": "./dist/webcomponent.umd.cjs",
+        "default": "./dist/webcomponent.js"
+      },
+      "./style.css": "./dist/style.css",
+      "./package.json": "./package.json"
     },
+    "sideEffects": [
+      "*.css",
+      "*.scss"
+    ],
     "files": [
       "dist",
       "README.md",
-      "LICENSE"
+      "LICENSE",
+      "package.json"
     ],
     "scripts": {
       "dev": "vite",
       "dev:demo": "vite --open /examples/index.html",
       "dev:api": "vite --open /examples/api-example.html",
       "dev:form": "vite --open /examples/form-example.html",
-      "build": "tsc && vite build",
+      "build": "npm run clean && tsc && vite build && npm run post-build",
+      "post-build": "cp dist/comboselect.umd.cjs dist/comboselect.umd.js 2>/dev/null || true && cp dist/webcomponent.umd.cjs dist/webcomponent.umd.js 2>/dev/null || true",
+      "build:watch": "vite build --watch",
       "preview": "vite preview",
+      "clean": "rimraf dist",
+      "prebuild": "npm run type-check",
       "type-check": "tsc --noEmit",
       "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
       "lint:fix": "eslint . --ext ts,tsx --fix",
       "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"examples/**/*.{html,ts}\"",
       "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"examples/**/*.{html,ts}\"",
       "test": "vitest",
+      "test:run": "vitest --run",
+      "test:watch": "vitest --watch",
       "test:ui": "vitest --ui",
-      "test:coverage": "vitest --coverage",
-      "prepublishOnly": "npm run type-check && npm run lint && npm run build"
+      "test:coverage": "vitest --coverage --reporter=html",
+      "ci": "npm run lint && npm run type-check && npm run test:run && npm run build",
+      "prepublishOnly": "npm run ci",
+      "postpublish": "git push && git push --tags"
     },
     "keywords": [
       "select",
@@ -46,9 +67,11 @@
       "tailwind",
       "input",
       "multiselect",
-      "search"
+      "search",
+      "web-component",
+      "shadow-dom"
     ],
-    "author": "Your Name <your.email@example.com>",
+    "author": "Nicolas RAMOS <npm@nicolas-r.fr>",
     "license": "MIT",
     "devDependencies": {
       "@tailwindcss/vite": "^4.1.17",
@@ -59,6 +82,7 @@
       "eslint": "^9.39.1",
       "jsdom": "^27.2.0",
       "prettier": "^3.6.2",
+      "rimraf": "^6.0.1",
       "tailwindcss": "^4.1.17",
       "typescript": "^5.9.3",
       "vite": "^7.2.4",
@@ -79,10 +103,10 @@
     },
     "repository": {
       "type": "git",
-      "url": "https://github.com/yourusername/comboselect.git"
+      "url": "https://github.com/n-ramos/comboselect.git"
     },
     "bugs": {
-      "url": "https://github.com/yourusername/comboselect/issues"
+      "url": "https://github.com/n-ramos/comboselect/issues"
     },
-    "homepage": "https://github.com/yourusername/comboselect#readme"
+    "homepage": "https://github.com/n-ramos/comboselect#readme"
   }
