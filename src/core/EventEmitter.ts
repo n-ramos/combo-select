@@ -1,17 +1,30 @@
 /**
- * Émetteur d'événements simple
+ * Émetteur d'événements simple avec typage fort
  */
 
-export type ComboSelectEvent = 'search' | 'select' | 'remove' | 'open' | 'close' | 'navigate';
+import type { SelectedItem } from '../types/index';
 
 /**
- * Type pour les callbacks d'événements
- * Utilise unknown au lieu de any pour forcer les vérifications de type
+ * Map des événements et leurs types de paramètres
  */
-type EventCallback = (...args: unknown[]) => void;
+export interface EventMap {
+  search: [query: string];
+  select: [item: SelectedItem];
+  remove: [item: SelectedItem];
+  open: [];
+  close: [];
+  navigate: [direction: 'up' | 'down' | 'select'];
+}
+
+export type ComboSelectEvent = keyof EventMap;
+
+/**
+ * Type pour les callbacks d'événements avec typage fort
+ */
+type EventCallback<E extends ComboSelectEvent> = (...args: EventMap[E]) => void;
 
 export class EventEmitter {
-  private events: Map<ComboSelectEvent, Set<EventCallback>>;
+  private events: Map<ComboSelectEvent, Set<EventCallback<ComboSelectEvent>>>;
 
   constructor() {
     this.events = new Map();
@@ -20,35 +33,36 @@ export class EventEmitter {
   /**
    * Enregistrer un listener pour un événement
    */
-  on(event: ComboSelectEvent, callback: EventCallback): void {
+  on<E extends ComboSelectEvent>(event: E, callback: EventCallback<E>): void {
     if (!this.events.has(event)) {
       this.events.set(event, new Set());
     }
     const eventSet = this.events.get(event);
     if (eventSet) {
-      eventSet.add(callback);
+      eventSet.add(callback as EventCallback<ComboSelectEvent>);
     }
   }
 
   /**
    * Retirer un listener pour un événement
    */
-  off(event: ComboSelectEvent, callback: EventCallback): void {
+  off<E extends ComboSelectEvent>(event: E, callback: EventCallback<E>): void {
     const eventSet = this.events.get(event);
     if (eventSet) {
-      eventSet.delete(callback);
+      eventSet.delete(callback as EventCallback<ComboSelectEvent>);
     }
   }
 
   /**
-   * Émettre un événement avec des arguments
+   * Émettre un événement avec des arguments typés
    */
-  emit(event: ComboSelectEvent, ...args: unknown[]): void {
+  emit<E extends ComboSelectEvent>(event: E, ...args: EventMap[E]): void {
     const eventSet = this.events.get(event);
     if (eventSet) {
       eventSet.forEach((callback) => {
         try {
-          callback(...args);
+          // CORRECTION: Cast vers le bon type
+          (callback as (...args: EventMap[E]) => void)(...args);
         } catch (error) {
           console.error(`Error in event handler for "${event}":`, error);
         }

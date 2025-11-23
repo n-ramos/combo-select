@@ -10,10 +10,6 @@ export type {
   SelectedItem,
   SuggestionItem,
   ComboSelectEvent,
-  ComboSelectAPI,
-  TypedComboSelectConfig,
-  StrictAutocompleteConfig,
-  StrictLocalDataConfig,
 } from './types';
 
 // Export des constantes
