@@ -3,7 +3,7 @@ name: Release and Publish
 on:
   push:
     tags:
-      - 'v*.*.*'  # Déclenché sur les tags comme v1.0.0, v1.2.3, etc.
+      - '*.*.*'  # Déclenché sur les tags comme v1.0.0, v1.2.3, etc.
 
 jobs:
   build-and-test:

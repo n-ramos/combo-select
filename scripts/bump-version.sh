@@ -41,7 +41,7 @@ npm version $VERSION_TYPE -m "chore: release v%s"
 NEW_VERSION=$(node -p "require('./package.json').version")
 
 echo ""
-echo "✅ Nouvelle version: v$NEW_VERSION"
+echo "✅ Nouvelle version: $NEW_VERSION"
 echo "✅ Package: @n-ramos/comboselect@$NEW_VERSION"
 echo ""
 echo "🚀 Pour publier, exécutez:"
@@ -52,9 +52,3 @@ echo "   - Tester le code"
 echo "   - Builder le projet"
 echo "   - Publier sur npm: @n-ramos/comboselect@$NEW_VERSION"
 echo "   - Créer une GitHub Release"
-```
-
-## 5. .npmrc (optionnel mais recommandé)
-```
-@n-ramos:registry=https://registry.npmjs.org/
-access=public
