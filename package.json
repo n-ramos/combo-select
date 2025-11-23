@@ -1,6 +1,6 @@
 {
     "name": "@n-ramos/comboselect",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "A modern, flexible select/autocomplete component with tags support",
     "type": "module",
     "main": "./dist/comboselect.umd.cjs",
@@ -54,8 +54,7 @@
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage --reporter=html",
         "ci": "npm run lint && npm run type-check && npm run build",
-        "prepublishOnly": "npm run ci",
-        "postpublish": "git push && git push --tags"
+        "prepublishOnly": "npm run ci"
     },
     "keywords": [
         "select",
