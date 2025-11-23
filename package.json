@@ -1,6 +1,6 @@
 {
     "name": "@n-ramos/comboselect",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "A modern, flexible select/autocomplete component with tags support",
     "type": "module",
     "main": "./dist/comboselect.umd.cjs",
